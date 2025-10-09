@@ -63,6 +63,11 @@ const FireworksArcade: React.FC = () => {
   const tiltRef = useRef<Tilt>({ gx: 0, gy: 0 });
   const pointerDownInfoRef = useRef<{ time: number, x: number, y: number } | null>(null);
   
+  // Drag-based size control state
+  const [isDraggingForSize, setIsDraggingForSize] = useState(false);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [explosionSizeMultiplier, setExplosionSizeMultiplier] = useState(1.0);
+  
   // Refs for state values needed in gameLoop to prevent stale closures
   const runningRef = useRef(running);
   useEffect(() => { runningRef.current = running; }, [running]);
@@ -238,7 +243,9 @@ const FireworksArcade: React.FC = () => {
             const explosionX = r.targetX ?? r.x;
             const explosionY = r.targetY ?? r.y;
             const selectedType = fireworkTypeRef.current === 'random' ? choice(FIREWORK_TYPES) : fireworkTypeRef.current;
-            newFireworks.push(new Firework(explosionX, explosionY, PALETTES[palette], 1, selectedType));
+            // Use size multiplier for user-launched rockets, default size for auto-launched
+            const power = r.isLargeExplosion ? 1.0 : explosionSizeMultiplier;
+            newFireworks.push(new Firework(explosionX, explosionY, PALETTES[palette], power, selectedType));
             pop(rand(200, 800), 0.08, 1.0); // Use power 1.0 for regular rocket explosions
 
             if (modeRef.current === 'arcade') {
@@ -474,6 +481,13 @@ const FireworksArcade: React.FC = () => {
         y: e.clientY - rect.top,
       };
       
+      if (mode === 'show') {
+        // Start drag-based size control
+        setIsDraggingForSize(true);
+        setDragStartY(e.clientY);
+        setExplosionSizeMultiplier(1.0);
+      }
+      
       // Start continuous hold detection and create rocket immediately
       setIsHolding(true);
       
@@ -494,6 +508,14 @@ const FireworksArcade: React.FC = () => {
           largeExplosionRocket.vy = -15 * (1 - power * 0.5); // Gets slower as power increases
         }
       }, 100); // Check every 100ms
+    }
+  };
+
+  const onCanvasPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (isDraggingForSize && mode === 'show') {
+      const dragDistance = dragStartY - e.clientY;
+      const newMultiplier = Math.max(0.3, Math.min(3.0, 1.0 + (dragDistance / 200)));
+      setExplosionSizeMultiplier(newMultiplier);
     }
   };
 
@@ -520,6 +542,13 @@ const FireworksArcade: React.FC = () => {
     if (holdIntervalRef.current) {
       clearInterval(holdIntervalRef.current);
       holdIntervalRef.current = null;
+    }
+
+    // Handle drag-based size control
+    if (isDraggingForSize && mode === 'show') {
+      setIsDraggingForSize(false);
+      // Reset multiplier for next firework
+      setExplosionSizeMultiplier(1.0);
     }
 
 
@@ -559,8 +588,8 @@ const FireworksArcade: React.FC = () => {
                 const showRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY });
                 rocketsRef.current.push(showRocket);
                 
-                // Also create immediate show firework
-                fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], 1, selectedType));
+                // Also create immediate show firework with size multiplier
+                fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], explosionSizeMultiplier, selectedType));
                 
                 // Play regular firework audio
                 pop(rand(200, 800), 0.08, 1.0);
@@ -569,8 +598,8 @@ const FireworksArcade: React.FC = () => {
                 const paintRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY });
                 rocketsRef.current.push(paintRocket);
                 
-                // Also create immediate paint firework
-                const paintFirework = new Firework(targetX, targetY, PALETTES[palette], 1, selectedType);
+                // Also create immediate paint firework with size multiplier
+                const paintFirework = new Firework(targetX, targetY, PALETTES[palette], explosionSizeMultiplier, selectedType);
                 // Make paint particles last longer and move slower for better paint effect
                 paintFirework.particles.forEach(p => {
                     p.life *= 2; // Double the lifetime
@@ -746,8 +775,22 @@ const FireworksArcade: React.FC = () => {
           className="absolute top-0 left-0 h-full w-full"
           onPointerDown={onCanvasPointerDown}
           onPointerUp={onCanvasPointerUp}
+          onPointerMove={onCanvasPointerMove}
           onPointerLeave={onCanvasPointerLeave}
         />
+
+        {/* Size Indicator UI */}
+        {isDraggingForSize && (
+          <div className="absolute top-4 left-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3 text-white">
+            <div className="text-sm font-medium mb-1">Explosion Size</div>
+            <div className="text-2xl font-bold text-pink-400">
+              {Math.round(explosionSizeMultiplier * 100)}%
+            </div>
+            <div className="text-xs text-white/70 mt-1">
+              Drag up/down to adjust
+            </div>
+          </div>
+        )}
 
         <TopBar
           mode={mode} setMode={setMode}
