@@ -5,6 +5,7 @@ import { Firework, Rocket, Particle } from '../lib/fireworks';
 import { usePopAudio } from '../hooks/usePopAudio';
 import TopBar from './TopBar';
 import Ad from './Ad';
+import TermsPage from './TermsPage';
 
 // Type for ad button states
 type AdStatus = 'idle' | 'loading' | 'error';
@@ -27,6 +28,7 @@ const FireworksArcade: React.FC = () => {
   const [finaleDuration, setFinaleDuration] = useState(5);
   const [isMenuVisible, setIsMenuVisible] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   // Arcade mode state
   const [score, setScore] = useState(0);
@@ -698,6 +700,7 @@ const FireworksArcade: React.FC = () => {
           onFinale={handleFinale}
           onClear={handleClear}
           onSave={handleSave}
+          onShowTerms={() => setShowTerms(true)}
           score={score} timer={timer} best={best}
           isMenuVisible={isMenuVisible} setIsMenuVisible={setIsMenuVisible}
           isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen}
@@ -733,6 +736,11 @@ const FireworksArcade: React.FC = () => {
       <div className="w-full h-[90px] shrink-0 bg-black flex items-center justify-center">
         <Ad />
       </div>
+
+      {/* Terms Page Modal */}
+      {showTerms && (
+        <TermsPage onClose={() => setShowTerms(false)} />
+      )}
     </div>
   );
 };

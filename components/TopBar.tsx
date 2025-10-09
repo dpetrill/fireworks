@@ -24,6 +24,7 @@ interface TopBarProps {
   onFinale: () => void;
   onClear: () => void;
   onSave: () => void;
+  onShowTerms: () => void;
   score: number;
   timer: number;
   best: number;
@@ -38,7 +39,7 @@ const TopBar: React.FC<TopBarProps> = ({
   fireworkSfxOn, setFireworkSfxOn, volume, setVolume,
   autoShow, setAutoShow, gravity, setGravity, 
   fireworkType, setFireworkType, finaleDuration, setFinaleDuration, onFinale,
-  onClear, onSave, 
+  onClear, onSave, onShowTerms, 
   score, timer, best, isMenuVisible, setIsMenuVisible, isFullscreen, onToggleFullscreen
 }) => {
 
@@ -96,6 +97,7 @@ const TopBar: React.FC<TopBarProps> = ({
             <button onClick={onFinale} className="px-3 py-1 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 border border-pink-300/30 text-sm">Finale</button>
             <button onClick={onClear} className="px-3 py-1 rounded-lg bg-gray-500/20 hover:bg-gray-500/30 border border-gray-300/30 text-sm">Clear</button>
             <button onClick={onSave} className="px-3 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-300/30 text-sm">Save Photo</button>
+            <button onClick={onShowTerms} className="px-3 py-1 rounded-lg bg-gray-500/20 hover:bg-gray-500/30 border border-gray-300/30 text-sm">Terms</button>
 
             <div className="flex items-center gap-2 bg-white/10 p-1 rounded-lg">
                 <button onClick={() => {
