@@ -555,9 +555,9 @@ const FireworksArcade: React.FC = () => {
             const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
             
             if (mode === 'show') {
-                // Create a fast rocket for show mode
-                const fastRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: -200, vx: 0 });
-                rocketsRef.current.push(fastRocket);
+                // Create a rocket for show mode with same speed as Auto Play
+                const showRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY });
+                rocketsRef.current.push(showRocket);
                 
                 // Also create immediate show firework
                 fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], 1, selectedType));
@@ -565,9 +565,9 @@ const FireworksArcade: React.FC = () => {
                 // Play regular firework audio
                 pop(rand(200, 800), 0.08, 1.0);
             } else if (mode === 'paint') {
-                // Create a fast rocket for paint mode
-                const fastRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: -200, vx: 0 });
-                rocketsRef.current.push(fastRocket);
+                // Create a rocket for paint mode with same speed as Auto Play
+                const paintRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY });
+                rocketsRef.current.push(paintRocket);
                 
                 // Also create immediate paint firework
                 const paintFirework = new Firework(targetX, targetY, PALETTES[palette], 1, selectedType);
