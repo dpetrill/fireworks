@@ -68,6 +68,10 @@ const FireworksArcade: React.FC = () => {
   const [dragStartY, setDragStartY] = useState(0);
   const [explosionSizeMultiplier, setExplosionSizeMultiplier] = useState(1.0);
   
+  // Finale audio state
+  const [isFinaleAudioPlaying, setIsFinaleAudioPlaying] = useState(false);
+  const finaleAudioTimeoutRef = useRef<number | null>(null);
+  
   // Refs for state values needed in gameLoop to prevent stale closures
   const runningRef = useRef(running);
   useEffect(() => { runningRef.current = running; }, [running]);
@@ -81,6 +85,44 @@ const FireworksArcade: React.FC = () => {
 
   // --- Audio ---
   const pop = usePopAudio(soundOn, volume, fireworkSfxOn);
+  
+  // Finale audio management
+  const startFinaleAudio = useCallback(() => {
+    if (isFinaleAudioPlaying) return; // Already playing, don't start another
+    
+    setIsFinaleAudioPlaying(true);
+    
+    // Play firework audio in a loop for 5 seconds
+    const playFinaleLoop = () => {
+      if (!isFinaleAudioPlaying) return; // Stop if cancelled
+      
+      // Play firework audio
+      pop(rand(200, 800), 0.08, 1.0);
+      
+      // Schedule next play in 0.5 seconds (2 times per second)
+      finaleAudioTimeoutRef.current = window.setTimeout(playFinaleLoop, 500);
+    };
+    
+    // Start the loop
+    playFinaleLoop();
+    
+    // Stop after 5 seconds
+    finaleAudioTimeoutRef.current = window.setTimeout(() => {
+      setIsFinaleAudioPlaying(false);
+      if (finaleAudioTimeoutRef.current) {
+        clearTimeout(finaleAudioTimeoutRef.current);
+        finaleAudioTimeoutRef.current = null;
+      }
+    }, 5000);
+  }, [isFinaleAudioPlaying, pop]);
+  
+  const stopFinaleAudio = useCallback(() => {
+    setIsFinaleAudioPlaying(false);
+    if (finaleAudioTimeoutRef.current) {
+      clearTimeout(finaleAudioTimeoutRef.current);
+      finaleAudioTimeoutRef.current = null;
+    }
+  }, []);
   
   // --- AdJuice SDK Readiness Check ---
   useEffect(() => {
@@ -683,11 +725,21 @@ const FireworksArcade: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [togglePlayback]);
 
+  // Cleanup finale audio on unmount
+  useEffect(() => {
+    return () => {
+      stopFinaleAudio();
+    };
+  }, [stopFinaleAudio]);
+
   // --- UI Functions ---
   const handleFinale = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
+    
+    // Start finale audio loop (5 seconds, prevents overlapping audio)
+    startFinaleAudio();
     
     // Calculate number of rockets based on duration (more rockets for longer finale)
     const rocketCount = Math.floor(25 * (finaleDuration / 5)); // Scale based on 5s default
@@ -696,7 +748,7 @@ const FireworksArcade: React.FC = () => {
     for (let i = 0; i < rocketCount; i++) {
       setTimeout(() => {
         rocketsRef.current.push(new Rocket(rect.width, rect.height, PALETTES));
-        pop(rand(200, 800), 0.08, 1); // Add audio for finale rockets
+        // Don't call pop() here - finale audio handles all audio
       }, rand(0, maxDelay));
     }
   };
