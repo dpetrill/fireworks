@@ -30,7 +30,7 @@ const AudioManager = {
   }
 };
 
-export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: boolean): (pitch?: number, duration?: number, power?: number) => void {
+export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: boolean): (pitch?: number, duration?: number, power?: number) => void | string {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const largeExplosionAudioRef = useRef<HTMLAudioElement | null>(null);
 

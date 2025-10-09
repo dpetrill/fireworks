@@ -260,10 +260,14 @@ export class Rocket {
   explodeY: number;
   targetX?: number;
   targetY?: number;
+  isLargeExplosion: boolean;
+  launchTime: number;
 
-  constructor(width: number, height: number, palettes: string[][], target?: { x: number, y: number }, customVelocity?: { vx?: number, vy?: number }) {
+  constructor(width: number, height: number, palettes: string[][], target?: { x: number, y: number }, customVelocity?: { vx?: number, vy?: number }, isLargeExplosion?: boolean) {
     this.color = choice(choice(palettes));
     this.exploded = false;
+    this.isLargeExplosion = isLargeExplosion || false;
+    this.launchTime = performance.now();
 
     if (target) {
         // User-launched rocket aiming for a target
@@ -298,11 +302,68 @@ export class Rocket {
 
   step(dt: number, gravity: number): void {
     if (this.exploded) return;
+    
+    // For large explosions, check if 5 seconds have elapsed
+    if (this.isLargeExplosion) {
+      const elapsed = (performance.now() - this.launchTime) / 1000;
+      if (elapsed >= 5.0) {
+        this.exploded = true;
+        return;
+      }
+    }
+    
     this.vy += gravity * dt * 60 * 0.15;
     this.x += this.vx * dt * 60;
     this.y += this.vy * dt * 60;
-    if (this.vy >= -0.2 || (this.targetY ? this.y <= this.targetY : this.y <= this.explodeY)) {
+    
+    // Regular explosion check for normal rockets
+    if (!this.isLargeExplosion && (this.vy >= -0.2 || (this.targetY ? this.y <= this.targetY : this.y <= this.explodeY))) {
         this.exploded = true;
+    }
+  }
+
+  render(ctx: CanvasRenderingContext2D): void {
+    if (this.exploded) return;
+    
+    if (this.isLargeExplosion) {
+      // Draw distinctive trail for large explosion rockets
+      const elapsed = (performance.now() - this.launchTime) / 1000;
+      const trailLength = Math.min(elapsed * 50, 200); // Trail grows over time
+      
+      // Create gradient for the trail
+      const gradient = ctx.createLinearGradient(this.x, this.y + trailLength, this.x, this.y);
+      gradient.addColorStop(0, this.color + '00'); // Transparent at bottom
+      gradient.addColorStop(0.3, this.color + '40'); // Semi-transparent
+      gradient.addColorStop(1, this.color + 'FF'); // Full color at rocket
+      
+      ctx.save();
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 8; // Thicker trail
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y + trailLength);
+      ctx.lineTo(this.x, this.y);
+      ctx.stroke();
+      
+      // Draw the rocket itself with a bright core
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Add a bright white core
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.restore();
+    } else {
+      // Regular rocket rendering
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 }

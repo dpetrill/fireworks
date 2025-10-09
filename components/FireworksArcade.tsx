@@ -28,7 +28,8 @@ const FireworksArcade: React.FC = () => {
   const [finaleDuration, setFinaleDuration] = useState(5);
   const [isMenuVisible, setIsMenuVisible] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
+    const [showTerms, setShowTerms] = useState(false);
+    const [largeExplosionRocket, setLargeExplosionRocket] = useState<Rocket | null>(null);
 
   // Arcade mode state
   const [score, setScore] = useState(0);
@@ -158,11 +159,7 @@ const FireworksArcade: React.FC = () => {
   const drawRocket = useCallback((r: Rocket) => {
     const ctx = ctxRef.current;
     if (!ctx) return;
-    ctx.fillStyle = r.color;
-    ctx.globalAlpha = 1;
-    ctx.beginPath();
-    ctx.arc(r.x, r.y, 1.5, 0, Math.PI * 2);
-    ctx.fill();
+    r.render(ctx);
   }, []);
   
   const drawTarget = useCallback((t: Target) => {
@@ -477,12 +474,26 @@ const FireworksArcade: React.FC = () => {
     }
   };
 
+  const cancelLargeExplosion = () => {
+    if (largeExplosionRocket) {
+      // Remove the rocket from the rockets array
+      const index = rocketsRef.current.indexOf(largeExplosionRocket);
+      if (index > -1) {
+        rocketsRef.current.splice(index, 1);
+      }
+      setLargeExplosionRocket(null);
+    }
+  };
+
   const onCanvasPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     const targetX = e.clientX - rect.left;
     const targetY = e.clientY - rect.top;
+
+    // Cancel large explosion if user releases early
+    cancelLargeExplosion();
 
 
     // Handle Paint and Show modes with charged explosions
@@ -510,11 +521,12 @@ const FireworksArcade: React.FC = () => {
             // Check if this is a large explosion that needs a timed rocket
             if (audioResult === 'LARGE_EXPLOSION') {
                 // Create a slow rocket that will explode at exactly 5 seconds
-                // Calculate velocity to reach target in 5 seconds
+                // Calculate velocity to reach target in 4 seconds (climb time)
                 const distanceToTarget = Math.abs(targetY - (rect.height + 10));
-                const slowVelocity = -distanceToTarget / 5; // 5 seconds to reach target
-                const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 });
+                const slowVelocity = -distanceToTarget / 4; // 4 seconds to reach target
+                const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 }, true);
                 rocketsRef.current.push(slowRocket);
+                setLargeExplosionRocket(slowRocket); // Track for cancellation
             } else {
                 // Regular paint firework with immediate explosion
                 const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
@@ -534,11 +546,12 @@ const FireworksArcade: React.FC = () => {
             // Check if this is a large explosion that needs a timed rocket
             if (audioResult === 'LARGE_EXPLOSION') {
                 // Create a slow rocket that will explode at exactly 5 seconds
-                // Calculate velocity to reach target in 5 seconds
+                // Calculate velocity to reach target in 4 seconds (climb time)
                 const distanceToTarget = Math.abs(targetY - (rect.height + 10));
-                const slowVelocity = -distanceToTarget / 5; // 5 seconds to reach target
-                const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 });
+                const slowVelocity = -distanceToTarget / 4; // 4 seconds to reach target
+                const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 }, true);
                 rocketsRef.current.push(slowRocket);
+                setLargeExplosionRocket(slowRocket); // Track for cancellation
             } else {
                 // Regular show firework with immediate explosion
                 const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
