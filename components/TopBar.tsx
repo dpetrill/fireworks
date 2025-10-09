@@ -109,6 +109,9 @@ const TopBar: React.FC<TopBarProps> = ({
                     disabled={!soundOn}
                     aria-label="Master Volume"
                 />
+                <span className="text-xs text-white/70 min-w-[2rem] text-center">
+                  {Math.round(volume * 100)}%
+                </span>
                  <div className="w-px h-5 bg-white/20 mx-1"></div>
                 <button 
                   onClick={() => setFireworkSfxOn(s => !s)} 

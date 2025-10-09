@@ -475,22 +475,6 @@ const FireworksArcade: React.FC = () => {
     const targetX = e.clientX - rect.left;
     const targetY = e.clientY - rect.top;
 
-    // Mega Bomb is a special case and takes priority
-    if (mode === 'arcade' && hasMegaBomb) {
-        fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], 4.0));
-        pop(100, 0.5);
-        setHasMegaBomb(false);
-
-        let pointsEarned = 0;
-        targetsRef.current.forEach(t => {
-            if (!t.dead) {
-                pointsEarned += Math.ceil(t.r * (t.life / 2));
-            }
-        });
-        setScore(s => s + pointsEarned);
-        targetsRef.current = [];
-        return;
-    }
 
     // Handle Paint and Show modes with charged explosions
     if (mode === 'paint' || mode === 'show') {
@@ -502,6 +486,12 @@ const FireworksArcade: React.FC = () => {
             const duration = performance.now() - info.time;
             // Calculate power: starts at 1, maxes out at 3 (300%) after a 0.8 second hold.
             power = clamp(1 + duration / 400, 1, 3);
+        }
+        
+        // In Show mode, launch rockets like in Arcade mode, but also create immediate explosion
+        if (mode === 'show') {
+            rocketsRef.current.push(new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }));
+            pop(1000, 0.05);
         }
         
         fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], power));
@@ -591,10 +581,59 @@ const FireworksArcade: React.FC = () => {
   const handleSave = () => {
     const canvas = canvasRef.current;
     if (canvas) {
-      const link = document.createElement('a');
-      link.download = 'fireworks.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      // Create a new canvas for the full-screen capture (excluding menu)
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) return;
+      
+      // Set canvas size to full screen
+      tempCanvas.width = window.innerWidth;
+      tempCanvas.height = window.innerHeight;
+      
+      // Fill with black background
+      tempCtx.fillStyle = '#000000';
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+      
+      // Draw the fireworks canvas scaled to full screen
+      tempCtx.drawImage(canvas, 0, 0, tempCanvas.width, tempCanvas.height);
+      
+      // Convert to blob for mobile-friendly download
+      tempCanvas.toBlob((blob) => {
+        if (!blob) return;
+        
+        // Create object URL
+        const url = URL.createObjectURL(blob);
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `fireworks-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`;
+        
+        // For mobile devices, try to trigger download
+        if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+          // On mobile, open in new tab to allow user to save
+          const newWindow = window.open();
+          if (newWindow) {
+            newWindow.document.write(`
+              <html>
+                <head><title>Save Fireworks Photo</title></head>
+                <body style="margin:0; padding:20px; background:#000; color:#fff; text-align:center;">
+                  <h2>🎆 Your Fireworks Photo</h2>
+                  <img src="${url}" style="max-width:100%; height:auto; border-radius:10px;" />
+                  <p style="margin-top:20px;">Long press the image above and select "Save to Photos" or "Download"</p>
+                  <button onclick="window.close()" style="margin-top:20px; padding:10px 20px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer;">Close</button>
+                </body>
+              </html>
+            `);
+          }
+        } else {
+          // Desktop: direct download
+          link.click();
+        }
+        
+        // Clean up object URL after a delay
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }, 'image/png', 0.95);
     }
   };
 
@@ -659,26 +698,6 @@ const FireworksArcade: React.FC = () => {
           </div>
         )}
 
-        {/* Mega Bomb Button */}
-        {mode === 'arcade' && running && megaBombAvailable && !hasMegaBomb && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
-                <button 
-                  onClick={handleGetMegaBomb}
-                  disabled={!isAdSdkReady || megaBombAdState !== 'idle'}
-                  className="text-lg bg-purple-500/80 hover:bg-purple-500/100 border border-purple-300/30 rounded-lg font-semibold transition-colors px-6 py-3 shadow-lg animate-pulse disabled:bg-gray-500/50 disabled:cursor-not-allowed disabled:animate-none"
-                  >
-                  {megaBombAdState === 'loading' ? 'Loading Ad...' : megaBombAdState === 'error' ? 'Ad Error' : '💣 Get Mega Bomb'}
-                  </button>
-            </div>
-        )}
-
-        {/* Mega Bomb Ready Indicator */}
-        {mode === 'arcade' && running && hasMegaBomb && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-purple-600/50 backdrop-blur-sm p-3 rounded-xl border border-purple-400/50">
-                <p className="text-lg font-bold text-center">💣 MEGA BOMB READY 💣</p>
-                <p className="text-sm text-center opacity-80">Tap anywhere to clear all targets!</p>
-            </div>
-        )}
       </div>
       <div className="w-full h-[90px] shrink-0 bg-black flex items-center justify-center">
         <Ad />
