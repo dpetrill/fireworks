@@ -33,45 +33,33 @@ const AudioManager = {
 export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: boolean): (pitch?: number, duration?: number, power?: number) => void | string {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
-    // Create audio element for regular fireworks sound
+    // Create audio element for continuous firework popping sound
     if (!audioRef.current) {
-      audioRef.current = new Audio('/firework.mp3');
+      audioRef.current = new Audio('/fireworkpopping.mp3');
       audioRef.current.preload = 'auto';
-      audioRef.current.loop = true; // Enable looping
+      audioRef.current.loop = true; // Enable continuous looping
       audioRef.current.volume = 0.5; // Default volume
     }
   }, []);
 
-  const pop = useCallback((pitch = 600, duration = 0.08, power = 1) => {
-    console.log('Audio check:', { soundOn, volume, fireworkSfxOn, muted: AudioManager.muted, power });
-    
-    // Check if sound should play
-    if (!soundOn || fireworkSfxOn === false) return;
-    
-    // Use global audio manager for mute control
-    const effectiveVolume = AudioManager.getEffectiveVolume();
-    if (effectiveVolume === 0) return;
-    
-    // Regular explosion audio for all fireworks
-    if (audioRef.current) {
-      console.log('Playing regular firework audio for power:', power);
-      // Set volume based on user settings and global mute
-      audioRef.current.volume = volume * effectiveVolume;
-      
-      // Always play regular audio for regular fireworks
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(console.error);
-      
-      // Stop the loop after 5-10 seconds (random duration)
-      const loopDuration = Math.random() * 5000 + 5000; // 5-10 seconds
-      setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
-      }, loopDuration);
+  // Start continuous audio when sound is enabled
+  useEffect(() => {
+    if (soundOn && fireworkSfxOn !== false && audioRef.current) {
+      const effectiveVolume = AudioManager.getEffectiveVolume();
+      if (effectiveVolume > 0) {
+        audioRef.current.volume = volume * effectiveVolume;
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(console.error);
+      }
+    } else if (audioRef.current) {
+      audioRef.current.pause();
     }
-  }, [soundOn, volume, fireworkSfxOn]);
+  }, [soundOn, fireworkSfxOn, volume]);
+
+  const pop = useCallback((pitch = 600, duration = 0.08, power = 1) => {
+    // No longer needed - audio plays continuously
+    // This function is kept for compatibility but does nothing
+  }, []);
 
   // Expose AudioManager globally for TopBar access
   useEffect(() => {
