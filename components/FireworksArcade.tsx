@@ -685,7 +685,6 @@ const FireworksArcade: React.FC = () => {
           volume={volume} setVolume={setVolume}
           autoShow={autoShow} setAutoShow={setAutoShow}
           gravity={gravity} setGravity={setGravity}
-          palette={palette} setPalette={setPalette}
           fireworkType={fireworkType} setFireworkType={setFireworkType}
           onFinale={handleFinale}
           onClear={handleClear}
