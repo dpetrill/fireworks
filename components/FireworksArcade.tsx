@@ -195,8 +195,8 @@ const FireworksArcade: React.FC = () => {
     const effectiveGravity = gravity + tiltRef.current.gy * 0.2;
     const wind = tiltRef.current.gx * 0.2;
 
-    // Auto-launch rockets in show and paint modes
-    if ((modeRef.current === 'show' || modeRef.current === 'paint') && autoShowRef.current) {
+    // Auto-launch rockets only in show mode
+    if (modeRef.current === 'show' && autoShowRef.current) {
       autoShowTimerRef.current -= dt;
       if (autoShowTimerRef.current <= 0) {
         rocketsRef.current.push(new Rocket(width, height, PALETTES));
@@ -269,7 +269,9 @@ const FireworksArcade: React.FC = () => {
 
     // --- Draw ---
     ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = `rgba(0, 0, 0, ${modeRef.current === 'paint' ? 0.05 : 0.18})`;
+    // In paint mode, use a very light overlay to create paint trail effect
+    // In other modes, use normal clearing
+    ctx.fillStyle = `rgba(0, 0, 0, ${modeRef.current === 'paint' ? 0.02 : 0.18})`;
     ctx.fillRect(0, 0, width, height);
     
     ctx.globalCompositeOperation = 'lighter';
@@ -494,8 +496,23 @@ const FireworksArcade: React.FC = () => {
             pop(1000, 0.05);
         }
         
-        fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], power));
-        pop(rand(200, 800));
+        // In Paint mode, create immediate explosion without rockets
+        if (mode === 'paint') {
+            // Create a special paint firework with longer-lasting particles
+            const paintFirework = new Firework(targetX, targetY, PALETTES[palette], power);
+            // Make paint particles last longer and move slower for better paint effect
+            paintFirework.particles.forEach(p => {
+                p.life *= 2; // Double the lifetime
+                p.vx *= 0.5; // Half the horizontal speed
+                p.vy *= 0.5; // Half the vertical speed
+                p.size *= 1.2; // Slightly larger particles
+            });
+            fireworksRef.current.push(paintFirework);
+            pop(rand(200, 800));
+        } else if (mode === 'show') {
+            fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], power));
+            pop(rand(200, 800));
+        }
     } 
     // Handle Arcade mode (launch rockets)
     else if (mode === 'arcade') {
