@@ -474,8 +474,14 @@ const FireworksArcade: React.FC = () => {
         y: e.clientY - rect.top,
       };
       
-      // Start continuous hold detection for power calculation only
+      // Start continuous hold detection and create rocket immediately
       setIsHolding(true);
+      
+      // Create the rocket immediately when holding starts
+      const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: info.x, y: info.y }, { vy: -15, vx: 0 }, true);
+      rocketsRef.current.push(slowRocket);
+      setLargeExplosionRocket(slowRocket);
+      
       holdIntervalRef.current = window.setInterval(() => {
         const info = pointerDownInfoRef.current;
         if (!info) return;
@@ -483,8 +489,10 @@ const FireworksArcade: React.FC = () => {
         const duration = performance.now() - info.time;
         const power = clamp(duration / 1000, 0, 2.0); // 0 to 200% over 2 seconds
         
-        // Just track the power, don't trigger explosions yet
-        // The explosion will be triggered in onCanvasPointerUp
+        // Update rocket velocity based on power (slower as power increases)
+        if (largeExplosionRocket) {
+          largeExplosionRocket.vy = -15 * (1 - power * 0.5); // Gets slower as power increases
+        }
       }, 100); // Check every 100ms
     }
   };
@@ -530,16 +538,19 @@ const FireworksArcade: React.FC = () => {
         
         // Check if this is a large explosion (power > 1.0) or regular firework
         if (power > 1.0) {
-            // Large explosion - create slow rocket and play large explosion audio
+            // Large explosion - rocket already created, just play audio
             const audioResult = pop(rand(200, 800), 0.08, power);
-            if (audioResult === 'LARGE_EXPLOSION') {
-                // Create slow rocket that moves based on power percentage
-                const slowVelocity = -15 * (1 - power); // Slower as power increases
-                const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 }, true);
-                rocketsRef.current.push(slowRocket);
-                setLargeExplosionRocket(slowRocket);
-            }
+            // Rocket is already flying from onCanvasPointerDown
         } else {
+            // Regular firework - cancel the large explosion rocket and create regular firework
+            if (largeExplosionRocket) {
+                // Remove the large explosion rocket
+                const index = rocketsRef.current.indexOf(largeExplosionRocket);
+                if (index > -1) {
+                    rocketsRef.current.splice(index, 1);
+                }
+                setLargeExplosionRocket(null);
+            }
             // Regular firework (power <= 1.0)
             const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
             
