@@ -32,8 +32,6 @@ const AudioManager = {
 
 export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: boolean): (pitch?: number, duration?: number, power?: number) => void | string {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const largeExplosionAudioRef = useRef<HTMLAudioElement | null>(null);
-
   useEffect(() => {
     // Create audio element for regular fireworks sound
     if (!audioRef.current) {
@@ -41,14 +39,6 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
       audioRef.current.preload = 'auto';
       audioRef.current.loop = true; // Enable looping
       audioRef.current.volume = 0.5; // Default volume
-    }
-
-    // Create audio element for large explosions (200%+ power)
-    if (!largeExplosionAudioRef.current) {
-      largeExplosionAudioRef.current = new Audio('/Largerthan150percent.mp3');
-      largeExplosionAudioRef.current.preload = 'auto';
-      largeExplosionAudioRef.current.loop = false; // Play once through
-      largeExplosionAudioRef.current.volume = 0.5; // Default volume
     }
   }, []);
 
@@ -62,19 +52,8 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
     const effectiveVolume = AudioManager.getEffectiveVolume();
     if (effectiveVolume === 0) return;
     
-    // Check if this is a large explosion (power > 1.0 for large explosions)
-    if (power > 1.0 && largeExplosionAudioRef.current) {
-      // Play the special large explosion audio starting at 0.05-0.07 seconds (last 4-5 seconds)
-      largeExplosionAudioRef.current.volume = volume * effectiveVolume;
-      largeExplosionAudioRef.current.currentTime = 0.05; // Start at 0.05 seconds
-      largeExplosionAudioRef.current.play().catch(console.error);
-      
-      // Return a special flag to indicate this needs a timed rocket
-      return 'LARGE_EXPLOSION';
-    }
-    
-    // Regular explosion audio (for ALL regular fireworks - power <= 1.0)
-    if (power <= 1.0 && audioRef.current) {
+    // Regular explosion audio for all fireworks
+    if (audioRef.current) {
       console.log('Playing regular firework audio for power:', power);
       // Set volume based on user settings and global mute
       audioRef.current.volume = volume * effectiveVolume;

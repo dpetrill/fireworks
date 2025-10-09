@@ -29,9 +29,6 @@ const FireworksArcade: React.FC = () => {
   const [isMenuVisible, setIsMenuVisible] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
-    const [largeExplosionRocket, setLargeExplosionRocket] = useState<Rocket | null>(null);
-  const [isHolding, setIsHolding] = useState(false);
-  const holdIntervalRef = useRef<number | null>(null);
 
   // Arcade mode state
   const [score, setScore] = useState(0);
@@ -286,8 +283,7 @@ const FireworksArcade: React.FC = () => {
             const explosionY = r.targetY ?? r.y;
             const selectedType = fireworkTypeRef.current === 'random' ? choice(FIREWORK_TYPES) : fireworkTypeRef.current;
             // Use size multiplier for user-launched rockets, default size for auto-launched
-            const power = r.isLargeExplosion ? 1.0 : explosionSizeMultiplier;
-            newFireworks.push(new Firework(explosionX, explosionY, PALETTES[palette], power, selectedType));
+            newFireworks.push(new Firework(explosionX, explosionY, PALETTES[palette], explosionSizeMultiplier, selectedType));
             pop(rand(200, 800), 0.08, 1.0); // Use power 1.0 for regular rocket explosions
 
             if (modeRef.current === 'arcade') {
@@ -529,27 +525,6 @@ const FireworksArcade: React.FC = () => {
         setDragStartY(e.clientY);
         setExplosionSizeMultiplier(1.0);
       }
-      
-      // Start continuous hold detection and create rocket immediately
-      setIsHolding(true);
-      
-      // Create the rocket immediately when holding starts
-      const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: info.x, y: info.y }, { vy: -15, vx: 0 }, true);
-      rocketsRef.current.push(slowRocket);
-      setLargeExplosionRocket(slowRocket);
-      
-      holdIntervalRef.current = window.setInterval(() => {
-        const info = pointerDownInfoRef.current;
-        if (!info) return;
-        
-        const duration = performance.now() - info.time;
-        const power = clamp(duration / 1000, 0, 2.0); // 0 to 200% over 2 seconds
-        
-        // Update rocket velocity based on power (slower as power increases)
-        if (largeExplosionRocket) {
-          largeExplosionRocket.vy = -15 * (1 - power * 0.5); // Gets slower as power increases
-        }
-      }, 100); // Check every 100ms
     }
   };
 
@@ -561,16 +536,6 @@ const FireworksArcade: React.FC = () => {
     }
   };
 
-  const cancelLargeExplosion = () => {
-    if (largeExplosionRocket) {
-      // Remove the rocket from the rockets array
-      const index = rocketsRef.current.indexOf(largeExplosionRocket);
-      if (index > -1) {
-        rocketsRef.current.splice(index, 1);
-      }
-      setLargeExplosionRocket(null);
-    }
-  };
 
   const onCanvasPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -579,13 +544,6 @@ const FireworksArcade: React.FC = () => {
     const targetX = e.clientX - rect.left;
     const targetY = e.clientY - rect.top;
 
-    // Stop hold detection
-    setIsHolding(false);
-    if (holdIntervalRef.current) {
-      clearInterval(holdIntervalRef.current);
-      holdIntervalRef.current = null;
-    }
-
     // Handle drag-based size control
     if (isDraggingForSize && mode === 'show') {
       setIsDraggingForSize(false);
@@ -593,67 +551,38 @@ const FireworksArcade: React.FC = () => {
       setExplosionSizeMultiplier(1.0);
     }
 
-
-    // Handle Paint and Show modes with charged explosions
+    // Handle Paint and Show modes
     if (mode === 'paint' || mode === 'show') {
-        const info = pointerDownInfoRef.current;
-        pointerDownInfoRef.current = null; // Reset on pointer up
-
-        let power = 0;
-        if (info) {
-            const duration = performance.now() - info.time;
-            // Calculate power: starts at 0, increments slowly to 2.0 (200%) over time
-            // Each 1ms adds 0.002, so it takes 1000ms (1 second) to reach 100%, 2000ms to reach 200%
-            power = clamp(duration / 1000, 0, 2.0);
-        }
+        const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
         
-        // Check if this is a large explosion (power > 1.0) or regular firework
-        if (power > 1.0) {
-            // Large explosion - rocket already created, just play audio
-            const audioResult = pop(rand(200, 800), 0.08, power);
-            // Rocket is already flying from onCanvasPointerDown
-        } else {
-            // Regular firework - cancel the large explosion rocket and create regular firework
-            if (largeExplosionRocket) {
-                // Remove the large explosion rocket
-                const index = rocketsRef.current.indexOf(largeExplosionRocket);
-                if (index > -1) {
-                    rocketsRef.current.splice(index, 1);
-                }
-                setLargeExplosionRocket(null);
-            }
-            // Regular firework (power <= 1.0)
-            const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
+        if (mode === 'show') {
+            // Create a rocket for show mode with same speed as Auto Play
+            const showRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY });
+            rocketsRef.current.push(showRocket);
             
-            if (mode === 'show') {
-                // Create a rocket for show mode with same speed as Auto Play
-                const showRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY });
-                rocketsRef.current.push(showRocket);
-                
-                // Also create immediate show firework with size multiplier
-                fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], explosionSizeMultiplier, selectedType));
-                
-                // Play regular firework audio
-                pop(rand(200, 800), 0.08, 1.0);
-            } else if (mode === 'paint') {
-                // Create a rocket for paint mode with same speed as Auto Play
-                const paintRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY });
-                rocketsRef.current.push(paintRocket);
-                
-                // Also create immediate paint firework with size multiplier
-                const paintFirework = new Firework(targetX, targetY, PALETTES[palette], explosionSizeMultiplier, selectedType);
-                // Make paint particles last longer and move slower for better paint effect
-                paintFirework.particles.forEach(p => {
-                    p.life *= 2; // Double the lifetime
-                    p.vx *= 0.5; // Half the horizontal speed
-                    p.vy *= 0.5; // Half the vertical speed
-                    p.size *= 1.2; // Slightly larger particles
-                });
-                fireworksRef.current.push(paintFirework);
-                
-                // Play regular firework audio
-                pop(rand(200, 800), 0.08, 1.0);
-            }
+            // Also create immediate show firework with size multiplier
+            fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], explosionSizeMultiplier, selectedType));
+            
+            // Play regular firework audio
+            pop(rand(200, 800), 0.08, 1.0);
+        } else if (mode === 'paint') {
+            // Create a rocket for paint mode with same speed as Auto Play
+            const paintRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY });
+            rocketsRef.current.push(paintRocket);
+            
+            // Also create immediate paint firework with size multiplier
+            const paintFirework = new Firework(targetX, targetY, PALETTES[palette], explosionSizeMultiplier, selectedType);
+            // Make paint particles last longer and move slower for better paint effect
+            paintFirework.particles.forEach(p => {
+                p.life *= 2; // Double the lifetime
+                p.vx *= 0.5; // Half the horizontal speed
+                p.vy *= 0.5; // Half the vertical speed
+                p.size *= 1.2; // Slightly larger particles
+            });
+            fireworksRef.current.push(paintFirework);
+            
+            // Play regular firework audio
+            pop(rand(200, 800), 0.08, 1.0);
         }
     } 
     // Handle Arcade mode (launch rockets)
