@@ -4,8 +4,6 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
   const ctxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
-    if (!soundOn) return;
-
     const resumeAudio = () => {
       if (!ctxRef.current) {
         const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -18,6 +16,7 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
       }
     };
     
+    // Always set up the audio context, regardless of soundOn state
     window.addEventListener('pointerdown', resumeAudio, { once: true });
     window.addEventListener('touchstart', resumeAudio, { once: true, passive: true });
 
@@ -25,15 +24,27 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
         window.removeEventListener('pointerdown', resumeAudio);
         window.removeEventListener('touchstart', resumeAudio);
     };
-  }, [soundOn]);
+  }, []); // Remove soundOn dependency so audio context is always available
 
   const pop = useCallback((pitch = 600, duration = 0.08) => {
-    if (!soundOn || !ctxRef.current || volume === 0) return;
+    console.log('Audio check:', { soundOn, volume, fireworkSfxOn });
+    if (!soundOn || volume === 0) return;
     if (fireworkSfxOn === false) return;
+    
+    // Ensure audio context exists
+    if (!ctxRef.current) {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContext) {
+        ctxRef.current = new AudioContext();
+      } else {
+        return; // No audio support
+      }
+    }
     
     const ctx = ctxRef.current;
     if (ctx.state === 'suspended') {
       ctx.resume().catch(console.error);
+      return; // Wait for resume
     }
     
     const o = ctx.createOscillator();
