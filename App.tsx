@@ -8,7 +8,26 @@ import FireworksArcade from './components/FireworksArcade';
 declare const adjuice: any;
 
 const App: React.FC = () => {
-    return <FireworksArcade />;
+    console.log('App component rendering...');
+    
+    // Add error boundary
+    try {
+        return <FireworksArcade />;
+    } catch (error) {
+        console.error('Error in App component:', error);
+        return (
+            <div style={{ 
+                color: 'white', 
+                background: 'black', 
+                padding: '20px',
+                fontFamily: 'Arial, sans-serif'
+            }}>
+                <h1>Firework Zen</h1>
+                <p>Error loading app: {String(error)}</p>
+                <p>Check console for details.</p>
+            </div>
+        );
+    }
 };
 
 export default App;
