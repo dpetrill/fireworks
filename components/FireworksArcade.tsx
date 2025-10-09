@@ -240,7 +240,7 @@ const FireworksArcade: React.FC = () => {
             const explosionY = r.targetY ?? r.y;
             const selectedType = fireworkTypeRef.current === 'random' ? choice(FIREWORK_TYPES) : fireworkTypeRef.current;
             newFireworks.push(new Firework(explosionX, explosionY, PALETTES[palette], 1, selectedType));
-            pop(rand(200, 800));
+            pop(rand(200, 800), 0.08, 1);
 
             if (modeRef.current === 'arcade') {
                 let rocketHitSomething = false;
@@ -500,7 +500,7 @@ const FireworksArcade: React.FC = () => {
         // In Show mode, only launch rockets if Auto-Play is enabled
         if (mode === 'show' && autoShow) {
             rocketsRef.current.push(new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }));
-            pop(1000, 0.05);
+            pop(1000, 0.05, 1);
         }
         
         // In Paint mode, create immediate explosion without rockets
@@ -516,12 +516,12 @@ const FireworksArcade: React.FC = () => {
                 p.size *= 1.2; // Slightly larger particles
             });
             fireworksRef.current.push(paintFirework);
-            pop(rand(200, 800));
+            pop(rand(200, 800), 0.08, power);
         } else if (mode === 'show') {
             // Use selected firework type
             const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
             fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], power, selectedType));
-            pop(rand(200, 800));
+            pop(rand(200, 800), 0.08, power);
         }
     } 
     // Handle Arcade mode (launch rockets)
@@ -606,6 +606,7 @@ const FireworksArcade: React.FC = () => {
     for (let i = 0; i < rocketCount; i++) {
       setTimeout(() => {
         rocketsRef.current.push(new Rocket(rect.width, rect.height, PALETTES));
+        pop(rand(200, 800), 0.08, 1); // Add audio for finale rockets
       }, rand(0, maxDelay));
     }
   };

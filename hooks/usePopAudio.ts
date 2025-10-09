@@ -30,21 +30,30 @@ const AudioManager = {
   }
 };
 
-export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: boolean): (pitch?: number, duration?: number) => void {
+export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: boolean): (pitch?: number, duration?: number, power?: number) => void {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const largeExplosionAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Create audio element for the fireworks sound
+    // Create audio element for regular fireworks sound
     if (!audioRef.current) {
       audioRef.current = new Audio('/firework.mp3');
       audioRef.current.preload = 'auto';
       audioRef.current.loop = true; // Enable looping
       audioRef.current.volume = 0.5; // Default volume
     }
+
+    // Create audio element for large explosions (200%+ power)
+    if (!largeExplosionAudioRef.current) {
+      largeExplosionAudioRef.current = new Audio('/Largerthan150percent.mp3');
+      largeExplosionAudioRef.current.preload = 'auto';
+      largeExplosionAudioRef.current.loop = false; // Play once through
+      largeExplosionAudioRef.current.volume = 0.5; // Default volume
+    }
   }, []);
 
-  const pop = useCallback((pitch = 600, duration = 0.08) => {
-    console.log('Audio check:', { soundOn, volume, fireworkSfxOn, muted: AudioManager.muted });
+  const pop = useCallback((pitch = 600, duration = 0.08, power = 1) => {
+    console.log('Audio check:', { soundOn, volume, fireworkSfxOn, muted: AudioManager.muted, power });
     
     // Check if sound should play
     if (!soundOn || fireworkSfxOn === false) return;
@@ -53,6 +62,16 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
     const effectiveVolume = AudioManager.getEffectiveVolume();
     if (effectiveVolume === 0) return;
     
+    // Check if this is a large explosion (200%+ power)
+    if (power >= 2.0 && largeExplosionAudioRef.current) {
+      // Play the special large explosion audio
+      largeExplosionAudioRef.current.volume = volume * effectiveVolume;
+      largeExplosionAudioRef.current.currentTime = 0;
+      largeExplosionAudioRef.current.play().catch(console.error);
+      return; // Don't play regular audio for large explosions
+    }
+    
+    // Regular explosion audio (for power < 200%)
     if (!audioRef.current) return;
 
     // Set volume based on user settings and global mute
