@@ -311,15 +311,14 @@ export class Rocket {
         return;
       }
       
-      // Handle meteor effect - if rocket goes off screen, make it come back down
-      if (canvasHeight && this.y < -50) {
-        // Rocket has gone off screen, make it fall back down like a meteor
-        this.vy = Math.abs(this.vy) * 0.5; // Slow down and reverse direction
-        this.y = -50; // Keep it just off screen
-      }
+      // For large explosions, don't let gravity affect the rocket much
+      // Keep it moving slowly upward
+      this.vy += gravity * dt * 60 * 0.05; // Much less gravity effect
+    } else {
+      // Normal rockets get full gravity
+      this.vy += gravity * dt * 60 * 0.15;
     }
     
-    this.vy += gravity * dt * 60 * 0.15;
     this.x += this.vx * dt * 60;
     this.y += this.vy * dt * 60;
     

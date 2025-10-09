@@ -492,15 +492,8 @@ const FireworksArcade: React.FC = () => {
     const targetX = e.clientX - rect.left;
     const targetY = e.clientY - rect.top;
 
-    // Only cancel large explosion if power was over 150% (1.5)
-    const info = pointerDownInfoRef.current;
-    if (info) {
-      const duration = performance.now() - info.time;
-      const power = clamp(1 + duration / 400, 1, 3);
-      if (power >= 1.5) { // Only cancel if it was a large explosion
-        cancelLargeExplosion();
-      }
-    }
+    // Don't cancel large explosions - let them play out
+    // The rocket will explode at the original click location regardless of where it ends up
 
 
     // Handle Paint and Show modes with charged explosions
@@ -527,12 +520,12 @@ const FireworksArcade: React.FC = () => {
             
             // Check if this is a large explosion that needs a timed rocket
             if (audioResult === 'LARGE_EXPLOSION') {
-                // Create a very slow rocket that will create a long trail across the screen
-                // Make it go very slowly so it takes time to cross the screen
-                const slowVelocity = -30; // Very slow upward movement
+                // Create an extremely slow rocket that takes longer than 5 seconds to reach target
+                // The rocket should move much slower than the audio length
+                const slowVelocity = -15; // Extremely slow upward movement - slower than audio
                 const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 }, true);
                 rocketsRef.current.push(slowRocket);
-                setLargeExplosionRocket(slowRocket); // Track for cancellation
+                setLargeExplosionRocket(slowRocket); // Track for reference
             } else {
                 // Regular paint firework with immediate explosion
                 const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
@@ -551,12 +544,12 @@ const FireworksArcade: React.FC = () => {
             
             // Check if this is a large explosion that needs a timed rocket
             if (audioResult === 'LARGE_EXPLOSION') {
-                // Create a very slow rocket that will create a long trail across the screen
-                // Make it go very slowly so it takes time to cross the screen
-                const slowVelocity = -30; // Very slow upward movement
+                // Create an extremely slow rocket that takes longer than 5 seconds to reach target
+                // The rocket should move much slower than the audio length
+                const slowVelocity = -15; // Extremely slow upward movement - slower than audio
                 const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 }, true);
                 rocketsRef.current.push(slowRocket);
-                setLargeExplosionRocket(slowRocket); // Track for cancellation
+                setLargeExplosionRocket(slowRocket); // Track for reference
             } else {
                 // Regular show firework with immediate explosion
                 const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;

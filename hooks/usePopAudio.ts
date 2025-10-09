@@ -62,8 +62,8 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
     const effectiveVolume = AudioManager.getEffectiveVolume();
     if (effectiveVolume === 0) return;
     
-    // Check if this is a large explosion (200%+ power)
-    if (power >= 2.0 && largeExplosionAudioRef.current) {
+    // Check if this is a large explosion (100%+ power)
+    if (power >= 1.0 && largeExplosionAudioRef.current) {
       // Play the special large explosion audio
       largeExplosionAudioRef.current.volume = volume * effectiveVolume;
       largeExplosionAudioRef.current.currentTime = 0;
