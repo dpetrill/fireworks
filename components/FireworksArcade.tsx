@@ -290,11 +290,11 @@ const FireworksArcade: React.FC = () => {
     const pointerInfo = pointerDownInfoRef.current;
     if ((modeRef.current === 'paint' || modeRef.current === 'show') && pointerInfo) {
       const duration = time - pointerInfo.time;
-      const power = clamp(1 + duration / 400, 1, 3); // Max 300%
+      const power = clamp(duration / 10, 0, 1); // 0 to 100%
       const percent = Math.floor(power * 100);
 
       const { x, y } = pointerInfo;
-      const radius = 20 + (power - 1) * 15; // Circle grows with power up to a radius of 50
+      const radius = 20 + power * 30; // Circle grows with power from 20 to 50
 
       ctx.globalAlpha = 0.8;
       ctx.strokeStyle = 'white';
@@ -501,11 +501,12 @@ const FireworksArcade: React.FC = () => {
         const info = pointerDownInfoRef.current;
         pointerDownInfoRef.current = null; // Reset on pointer up
 
-        let power = 1;
+        let power = 0;
         if (info) {
             const duration = performance.now() - info.time;
-            // Calculate power: starts at 1, maxes out at 3 (300%) after a 0.8 second hold.
-            power = clamp(1 + duration / 400, 1, 3);
+            // Calculate power: starts at 0, increments slowly to 1 (100%) over time
+            // Each 10ms adds 0.01, so it takes 10 seconds to reach 100%
+            power = clamp(duration / 10, 0, 1);
         }
         
         // In Show mode, only launch rockets if Auto-Play is enabled
@@ -516,8 +517,8 @@ const FireworksArcade: React.FC = () => {
         
         // In Paint mode, create immediate explosion without rockets
         if (mode === 'paint') {
-            // Check if this is a large explosion (power > 1.0 means hold longer than single click)
-            if (power > 1.0) {
+            // Check if this is a large explosion (power > 0.1 means hold longer than single click)
+            if (power > 0.1) {
                 // Large explosion - play special audio and create slow rocket
                 const audioResult = pop(rand(200, 800), 0.08, power);
                 if (audioResult === 'LARGE_EXPLOSION') {
@@ -543,8 +544,8 @@ const FireworksArcade: React.FC = () => {
                 pop(rand(200, 800), 0.08, power);
             }
         } else if (mode === 'show') {
-            // Check if this is a large explosion (power > 1.0 means hold longer than single click)
-            if (power > 1.0) {
+            // Check if this is a large explosion (power > 0.1 means hold longer than single click)
+            if (power > 0.1) {
                 // Large explosion - play special audio and create slow rocket
                 const audioResult = pop(rand(200, 800), 0.08, power);
                 if (audioResult === 'LARGE_EXPLOSION') {

@@ -271,7 +271,7 @@ export class Rocket {
 
     if (target) {
         // User-launched rocket aiming for a target
-        this.x = width / 2;
+        this.x = target.x; // Start from the click location, not center
         this.y = height + 10;
         
         if (customVelocity) {
