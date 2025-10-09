@@ -208,7 +208,7 @@ const FireworksArcade: React.FC = () => {
     }
     
     // Step all physics objects
-    rocketsRef.current.forEach(r => r.step(dt, effectiveGravity));
+    rocketsRef.current.forEach(r => r.step(dt, effectiveGravity, height));
     fireworksRef.current.forEach(f => f.step(dt, effectiveGravity));
     particlesRef.current.forEach(p => {
         p.step(dt, effectiveGravity);
@@ -492,8 +492,15 @@ const FireworksArcade: React.FC = () => {
     const targetX = e.clientX - rect.left;
     const targetY = e.clientY - rect.top;
 
-    // Cancel large explosion if user releases early
-    cancelLargeExplosion();
+    // Only cancel large explosion if power was over 150% (1.5)
+    const info = pointerDownInfoRef.current;
+    if (info) {
+      const duration = performance.now() - info.time;
+      const power = clamp(1 + duration / 400, 1, 3);
+      if (power >= 1.5) { // Only cancel if it was a large explosion
+        cancelLargeExplosion();
+      }
+    }
 
 
     // Handle Paint and Show modes with charged explosions
@@ -520,10 +527,9 @@ const FireworksArcade: React.FC = () => {
             
             // Check if this is a large explosion that needs a timed rocket
             if (audioResult === 'LARGE_EXPLOSION') {
-                // Create a slow rocket that will explode at exactly 5 seconds
-                // Calculate velocity to reach target in 4 seconds (climb time)
-                const distanceToTarget = Math.abs(targetY - (rect.height + 10));
-                const slowVelocity = -distanceToTarget / 4; // 4 seconds to reach target
+                // Create a very slow rocket that will create a long trail across the screen
+                // Make it go very slowly so it takes time to cross the screen
+                const slowVelocity = -30; // Very slow upward movement
                 const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 }, true);
                 rocketsRef.current.push(slowRocket);
                 setLargeExplosionRocket(slowRocket); // Track for cancellation
@@ -545,10 +551,9 @@ const FireworksArcade: React.FC = () => {
             
             // Check if this is a large explosion that needs a timed rocket
             if (audioResult === 'LARGE_EXPLOSION') {
-                // Create a slow rocket that will explode at exactly 5 seconds
-                // Calculate velocity to reach target in 4 seconds (climb time)
-                const distanceToTarget = Math.abs(targetY - (rect.height + 10));
-                const slowVelocity = -distanceToTarget / 4; // 4 seconds to reach target
+                // Create a very slow rocket that will create a long trail across the screen
+                // Make it go very slowly so it takes time to cross the screen
+                const slowVelocity = -30; // Very slow upward movement
                 const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 }, true);
                 rocketsRef.current.push(slowRocket);
                 setLargeExplosionRocket(slowRocket); // Track for cancellation

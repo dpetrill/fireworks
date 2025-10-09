@@ -300,7 +300,7 @@ export class Rocket {
     }
   }
 
-  step(dt: number, gravity: number): void {
+  step(dt: number, gravity: number, canvasHeight?: number): void {
     if (this.exploded) return;
     
     // For large explosions, check if 5 seconds have elapsed
@@ -309,6 +309,13 @@ export class Rocket {
       if (elapsed >= 5.0) {
         this.exploded = true;
         return;
+      }
+      
+      // Handle meteor effect - if rocket goes off screen, make it come back down
+      if (canvasHeight && this.y < -50) {
+        // Rocket has gone off screen, make it fall back down like a meteor
+        this.vy = Math.abs(this.vy) * 0.5; // Slow down and reverse direction
+        this.y = -50; // Keep it just off screen
       }
     }
     
@@ -328,18 +335,34 @@ export class Rocket {
     if (this.isLargeExplosion) {
       // Draw distinctive trail for large explosion rockets
       const elapsed = (performance.now() - this.launchTime) / 1000;
-      const trailLength = Math.min(elapsed * 50, 200); // Trail grows over time
+      const trailLength = Math.min(elapsed * 100, 400); // Much longer trail
       
-      // Create gradient for the trail
+      // Create gradient for the trail with shimmer effect
       const gradient = ctx.createLinearGradient(this.x, this.y + trailLength, this.x, this.y);
       gradient.addColorStop(0, this.color + '00'); // Transparent at bottom
-      gradient.addColorStop(0.3, this.color + '40'); // Semi-transparent
+      gradient.addColorStop(0.2, this.color + '20'); // Very faint
+      gradient.addColorStop(0.5, this.color + '60'); // Medium
+      gradient.addColorStop(0.8, this.color + 'A0'); // Strong
       gradient.addColorStop(1, this.color + 'FF'); // Full color at rocket
       
       ctx.save();
       ctx.strokeStyle = gradient;
-      ctx.lineWidth = 8; // Thicker trail
+      ctx.lineWidth = 12; // Even thicker trail
       ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y + trailLength);
+      ctx.lineTo(this.x, this.y);
+      ctx.stroke();
+      
+      // Add shimmer effect with multiple overlapping trails
+      const shimmerGradient = ctx.createLinearGradient(this.x, this.y + trailLength, this.x, this.y);
+      shimmerGradient.addColorStop(0, '#FFFFFF00'); // Transparent white at bottom
+      shimmerGradient.addColorStop(0.3, '#FFFFFF40'); // Semi-transparent white
+      shimmerGradient.addColorStop(0.7, '#FFFFFF80'); // More white
+      shimmerGradient.addColorStop(1, '#FFFFFFFF'); // Full white at rocket
+      
+      ctx.strokeStyle = shimmerGradient;
+      ctx.lineWidth = 6; // Thinner shimmer trail
       ctx.beginPath();
       ctx.moveTo(this.x, this.y + trailLength);
       ctx.lineTo(this.x, this.y);
@@ -348,14 +371,23 @@ export class Rocket {
       // Draw the rocket itself with a bright core
       ctx.fillStyle = this.color;
       ctx.beginPath();
-      ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
+      ctx.arc(this.x, this.y, 8, 0, Math.PI * 2);
       ctx.fill();
       
       // Add a bright white core
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+      ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
       ctx.fill();
+      
+      // Add a pulsing effect
+      const pulse = Math.sin(elapsed * 10) * 0.3 + 1;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, 6 * pulse, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
       
       ctx.restore();
     } else {
