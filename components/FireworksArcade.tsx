@@ -65,6 +65,8 @@ const FireworksArcade: React.FC = () => {
   useEffect(() => { modeRef.current = mode; }, [mode]);
   const autoShowRef = useRef(autoShow);
   useEffect(() => { autoShowRef.current = autoShow; }, [autoShow]);
+  const fireworkTypeRef = useRef(fireworkType);
+  useEffect(() => { fireworkTypeRef.current = fireworkType; }, [fireworkType]);
 
 
   // --- Audio ---
@@ -234,7 +236,7 @@ const FireworksArcade: React.FC = () => {
         explodingRockets.forEach(r => {
             const explosionX = r.targetX ?? r.x;
             const explosionY = r.targetY ?? r.y;
-            const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
+            const selectedType = fireworkTypeRef.current === 'random' ? choice(FIREWORK_TYPES) : fireworkTypeRef.current;
             newFireworks.push(new Firework(explosionX, explosionY, PALETTES[palette], 1, selectedType));
             pop(rand(200, 800));
 
@@ -493,8 +495,8 @@ const FireworksArcade: React.FC = () => {
             power = clamp(1 + duration / 400, 1, 3);
         }
         
-        // In Show mode, launch rockets like in Arcade mode, but also create immediate explosion
-        if (mode === 'show') {
+        // In Show mode, only launch rockets if Auto-Play is enabled
+        if (mode === 'show' && autoShow) {
             rocketsRef.current.push(new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }));
             pop(1000, 0.05);
         }
