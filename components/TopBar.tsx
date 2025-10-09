@@ -101,6 +101,10 @@ const TopBar: React.FC<TopBarProps> = ({
                     console.log('Setting soundOn to:', !s);
                     return !s;
                   });
+                  // Also toggle global audio manager
+                  if (typeof window !== 'undefined' && (window as any).AudioManager) {
+                    (window as any).AudioManager.toggleMute();
+                  }
                 }} className="text-lg w-7 h-7 flex items-center justify-center rounded-md hover:bg-white/20 transition-colors" aria-label={soundOn ? "Mute All" : "Unmute All"}>
                     {soundOn ? '🔊' : '🔇'}
                 </button>
