@@ -74,23 +74,24 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
     }
     
     // Regular explosion audio (for single clicks - power = 0)
-    if (!audioRef.current) return;
-
-    // Set volume based on user settings and global mute
-    audioRef.current.volume = volume * effectiveVolume;
-    
-    // Always play regular audio for single clicks (power = 0)
-    audioRef.current.currentTime = 0;
-    audioRef.current.play().catch(console.error);
-    
-    // Stop the loop after 5-10 seconds (random duration)
-    const loopDuration = Math.random() * 5000 + 5000; // 5-10 seconds
-    setTimeout(() => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-    }, loopDuration);
+    if (power === 0 && audioRef.current) {
+      console.log('Playing regular firework audio');
+      // Set volume based on user settings and global mute
+      audioRef.current.volume = volume * effectiveVolume;
+      
+      // Always play regular audio for single clicks (power = 0)
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(console.error);
+      
+      // Stop the loop after 5-10 seconds (random duration)
+      const loopDuration = Math.random() * 5000 + 5000; // 5-10 seconds
+      setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+      }, loopDuration);
+    }
   }, [soundOn, volume, fireworkSfxOn]);
 
   // Expose AudioManager globally for TopBar access
