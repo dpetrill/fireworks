@@ -303,10 +303,10 @@ export class Rocket {
   step(dt: number, gravity: number, canvasHeight?: number): void {
     if (this.exploded) return;
     
-    // For large explosions, check if 5 seconds have elapsed
+    // For large explosions, check if 4.5 seconds have elapsed (to sync with audio)
     if (this.isLargeExplosion) {
       const elapsed = (performance.now() - this.launchTime) / 1000;
-      if (elapsed >= 5.0) {
+      if (elapsed >= 4.5) {
         this.exploded = true;
         return;
       }

@@ -537,8 +537,8 @@ const FireworksArcade: React.FC = () => {
             power = clamp(duration / 1000, 0, 1);
         }
         
-        // In Show mode, only launch rockets if Auto-Play is enabled
-        if (mode === 'show' && autoShow) {
+        // In Show mode, always launch rockets regardless of Auto-Play setting
+        if (mode === 'show') {
             rocketsRef.current.push(new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }));
             pop(1000, 0.05, 1);
         }
@@ -550,8 +550,8 @@ const FireworksArcade: React.FC = () => {
                 // Single click - create rocket trail and immediate explosion
                 const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
                 
-                // Create a fast rocket for single clicks
-                const fastRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY });
+                // Create a fast rocket for single clicks (like a water pistol)
+                const fastRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: -200, vx: 0 }); // Very fast upward movement
                 rocketsRef.current.push(fastRocket);
                 
                 // Also create immediate paint firework
@@ -575,8 +575,8 @@ const FireworksArcade: React.FC = () => {
                 // Single click - create rocket trail and immediate explosion
                 const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
                 
-                // Create a fast rocket for single clicks
-                const fastRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY });
+                // Create a fast rocket for single clicks (like a water pistol)
+                const fastRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: -200, vx: 0 }); // Very fast upward movement
                 rocketsRef.current.push(fastRocket);
                 
                 // Also create immediate show firework

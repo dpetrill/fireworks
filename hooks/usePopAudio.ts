@@ -64,9 +64,9 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
     
     // Check if this is a large explosion (any hold - power > 0)
     if (power > 0 && largeExplosionAudioRef.current) {
-      // Play the special large explosion audio
+      // Play the special large explosion audio starting at 0.05-0.07 seconds (last 4-5 seconds)
       largeExplosionAudioRef.current.volume = volume * effectiveVolume;
-      largeExplosionAudioRef.current.currentTime = 0;
+      largeExplosionAudioRef.current.currentTime = 0.05; // Start at 0.05 seconds
       largeExplosionAudioRef.current.play().catch(console.error);
       
       // Return a special flag to indicate this needs a timed rocket
