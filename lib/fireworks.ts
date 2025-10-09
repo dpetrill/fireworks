@@ -390,11 +390,51 @@ export class Rocket {
       
       ctx.restore();
     } else {
-      // Regular rocket rendering
+      // Regular rocket rendering with beautiful trail
+      const trailLength = 60; // Shorter trail for regular rockets
+      
+      // Create gradient for the trail
+      const gradient = ctx.createLinearGradient(this.x, this.y + trailLength, this.x, this.y);
+      gradient.addColorStop(0, this.color + '00'); // Transparent at bottom
+      gradient.addColorStop(0.3, this.color + '40'); // Faint
+      gradient.addColorStop(0.7, this.color + '80'); // Medium
+      gradient.addColorStop(1, this.color + 'FF'); // Full color at rocket
+      
+      ctx.save();
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 4; // Thick trail
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y + trailLength);
+      ctx.lineTo(this.x, this.y);
+      ctx.stroke();
+      
+      // Add white shimmer effect
+      const shimmerGradient = ctx.createLinearGradient(this.x, this.y + trailLength, this.x, this.y);
+      shimmerGradient.addColorStop(0, '#FFFFFF00'); // Transparent white at bottom
+      shimmerGradient.addColorStop(0.5, '#FFFFFF60'); // Semi-transparent white
+      shimmerGradient.addColorStop(1, '#FFFFFFFF'); // Full white at rocket
+      
+      ctx.strokeStyle = shimmerGradient;
+      ctx.lineWidth = 2; // Thinner shimmer trail
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y + trailLength);
+      ctx.lineTo(this.x, this.y);
+      ctx.stroke();
+      
+      // Draw the rocket itself
       ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Add a bright white core
+      ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
       ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
       ctx.fill();
+      
+      ctx.restore();
     }
   }
 }
