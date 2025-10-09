@@ -44,29 +44,199 @@ export class Firework {
   y: number;
   palette: string[];
   particles: Particle[];
+  type: string;
 
-  constructor(x: number, y: number, palette: string[], power: number = 1) {
+  constructor(x: number, y: number, palette: string[], power: number = 1, type: string = 'random') {
     this.x = x;
     this.y = y;
     this.palette = palette;
     this.particles = [];
+    this.type = type;
     
-    // Use power to scale the explosion
-    const count = (120 + Math.random() * 100) * power;
-    const base = rand(0, Math.PI * 2);
-    const shapes: Shape[] = ['dot', 'square', 'star', 'line'];
-    const shape = choice(shapes);
+    // Create different firework types
+    switch(type) {
+      case 'heart':
+        this.createHeart(power);
+        break;
+      case 'star':
+        this.createStar(power);
+        break;
+      case 'spiral':
+        this.createSpiral(power);
+        break;
+      case 'ring':
+        this.createRing(power);
+        break;
+      case 'willow':
+        this.createWillow(power);
+        break;
+      case 'palm':
+        this.createPalm(power);
+        break;
+      case 'crossette':
+        this.createCrossette(power);
+        break;
+      case 'peony':
+        this.createPeony(power);
+        break;
+      case 'chrysanthemum':
+        this.createChrysanthemum(power);
+        break;
+      default: // 'burst' or 'random'
+        this.createBurst(power);
+        break;
+    }
+  }
 
+  createBurst(power: number) {
+    const count = Math.floor(120 * power);
     for (let i = 0; i < count; i++) {
-      const angle = base + (i / count) * Math.PI * 2 + rand(-0.06, 0.06);
-      // Scale speed and life with the square root of power to make it feel more natural
+      const angle = (Math.PI * 2 * i) / count;
       const speed = rand(1.2, 3.6) * Math.sqrt(power);
       const vx = Math.cos(angle) * speed;
       const vy = Math.sin(angle) * speed;
       const color = choice(this.palette);
       const life = rand(0.8, 1.8) * Math.sqrt(power);
-      const size = (shape === 'line' ? rand(1.5, 2.5) : rand(1.8, 3.4)) * Math.cbrt(power); // Use cube root for a less extreme size increase
-      this.particles.push(new Particle(x, y, vx, vy, color, life, size, shape));
+      const size = rand(1.8, 3.4) * Math.cbrt(power);
+      this.particles.push(new Particle(this.x, this.y, vx, vy, color, life, size, 'dot'));
+    }
+  }
+
+  createHeart(power: number) {
+    const count = Math.floor(100 * power);
+    for (let i = 0; i < count; i++) {
+      const t = (i / count) * Math.PI * 2;
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+      const speed = 0.5 * Math.sqrt(power);
+      const color = this.palette[0];
+      const life = rand(1.2, 2.0) * Math.sqrt(power);
+      const size = rand(2.0, 3.5) * Math.cbrt(power);
+      this.particles.push(new Particle(this.x, this.y, x * speed, y * speed, color, life, size, 'dot'));
+    }
+  }
+
+  createStar(power: number) {
+    const points = 5;
+    const count = Math.floor(100 * power);
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count;
+      const radius = (i % (count / points) < count / (points * 2)) ? 8 : 4;
+      const speed = (rand(1, 2) + radius * 0.5) * Math.sqrt(power);
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      const color = this.palette[Math.floor(i / 20) % this.palette.length];
+      const life = rand(1.0, 1.8) * Math.sqrt(power);
+      const size = rand(1.5, 3.0) * Math.cbrt(power);
+      this.particles.push(new Particle(this.x, this.y, vx, vy, color, life, size, 'star'));
+    }
+  }
+
+  createSpiral(power: number) {
+    const count = Math.floor(120 * power);
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 4 * i) / count;
+      const radius = i * 0.05 * Math.sqrt(power);
+      const speed = 4 * Math.sqrt(power);
+      const vx = Math.cos(angle) * speed + Math.cos(angle) * radius;
+      const vy = Math.sin(angle) * speed + Math.sin(angle) * radius;
+      const color = this.palette[i % this.palette.length];
+      const life = rand(0.9, 1.5) * Math.sqrt(power);
+      const size = rand(1.5, 2.5) * Math.cbrt(power);
+      this.particles.push(new Particle(this.x, this.y, vx, vy, color, life, size, 'dot'));
+    }
+  }
+
+  createRing(power: number) {
+    const count = Math.floor(80 * power);
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count;
+      const speed = 6 * Math.sqrt(power);
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      const color = this.palette[i % this.palette.length];
+      const life = rand(1.0, 1.6) * Math.sqrt(power);
+      const size = rand(2.0, 3.0) * Math.cbrt(power);
+      this.particles.push(new Particle(this.x, this.y, vx, vy, color, life, size, 'dot'));
+    }
+  }
+
+  createWillow(power: number) {
+    const count = Math.floor(150 * power);
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count;
+      const speed = (rand(1, 3) + 2) * Math.sqrt(power);
+      const vx = Math.cos(angle) * speed * 0.5;
+      const vy = Math.sin(angle) * speed + 2;
+      const color = this.palette[0];
+      const life = rand(1.2, 2.0) * Math.sqrt(power);
+      const size = rand(1.5, 2.5) * Math.cbrt(power);
+      this.particles.push(new Particle(this.x, this.y, vx, vy, color, life, size, 'line'));
+    }
+  }
+
+  createPalm(power: number) {
+    const branches = 8;
+    for (let b = 0; b < branches; b++) {
+      const angle = (Math.PI * 2 * b) / branches;
+      for (let i = 0; i < Math.floor(20 * power); i++) {
+        const speed = (rand(2, 4) + 4) * Math.sqrt(power);
+        const spread = (rand(-0.5, 0.5)) * 0.5;
+        const vx = Math.cos(angle + spread) * speed;
+        const vy = Math.sin(angle + spread) * speed + 1;
+        const color = this.palette[b % this.palette.length];
+        const life = rand(1.0, 1.6) * Math.sqrt(power);
+        const size = rand(2.0, 3.0) * Math.cbrt(power);
+        this.particles.push(new Particle(this.x, this.y, vx, vy, color, life, size, 'dot'));
+      }
+    }
+  }
+
+  createCrossette(power: number) {
+    const directions = 12;
+    for (let d = 0; d < directions; d++) {
+      const angle = (Math.PI * 2 * d) / directions;
+      const speed = 7 * Math.sqrt(power);
+      const color = this.palette[d % this.palette.length];
+      
+      // Main particle
+      this.particles.push(new Particle(
+        this.x, this.y,
+        Math.cos(angle) * speed,
+        Math.sin(angle) * speed,
+        color, rand(1.5, 2.5) * Math.cbrt(power), rand(0.5, 1.0) * Math.sqrt(power), 'dot'
+      ));
+    }
+  }
+
+  createPeony(power: number) {
+    const layers = 3;
+    for (let layer = 0; layer < layers; layer++) {
+      const particleCount = Math.floor((60 - layer * 15) * power);
+      const speed = (5 - layer * 1.5) * Math.sqrt(power);
+      for (let i = 0; i < particleCount; i++) {
+        const angle = (Math.PI * 2 * i) / particleCount;
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+        const color = this.palette[layer % this.palette.length];
+        const life = rand(0.8, 1.4) * Math.sqrt(power);
+        const size = (3 - layer) * Math.cbrt(power);
+        this.particles.push(new Particle(this.x, this.y, vx, vy, color, life, size, 'dot'));
+      }
+    }
+  }
+
+  createChrysanthemum(power: number) {
+    const count = Math.floor(200 * power);
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count;
+      const speed = (rand(2, 6) + 2) * Math.sqrt(power);
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      const color = choice(this.palette);
+      const life = rand(1.0, 1.8) * Math.sqrt(power);
+      const size = rand(1.0, 2.5) * Math.cbrt(power);
+      this.particles.push(new Particle(this.x, this.y, vx, vy, color, life, size, 'dot'));
     }
   }
 

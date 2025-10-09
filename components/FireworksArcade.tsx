@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { Mode, Target, Tilt } from '../types';
-import { PALETTES, clamp, rand, choice } from '../constants';
+import { PALETTES, FIREWORK_TYPES, clamp, rand, choice } from '../constants';
 import { Firework, Rocket, Particle } from '../lib/fireworks';
 import { usePopAudio } from '../hooks/usePopAudio';
 import TopBar from './TopBar';
@@ -232,7 +232,8 @@ const FireworksArcade: React.FC = () => {
         explodingRockets.forEach(r => {
             const explosionX = r.targetX ?? r.x;
             const explosionY = r.targetY ?? r.y;
-            newFireworks.push(new Firework(explosionX, explosionY, PALETTES[palette]));
+            const fireworkType = choice(FIREWORK_TYPES);
+            newFireworks.push(new Firework(explosionX, explosionY, PALETTES[palette], 1, fireworkType));
             pop(rand(200, 800));
 
             if (modeRef.current === 'arcade') {
@@ -498,8 +499,9 @@ const FireworksArcade: React.FC = () => {
         
         // In Paint mode, create immediate explosion without rockets
         if (mode === 'paint') {
-            // Create a special paint firework with longer-lasting particles
-            const paintFirework = new Firework(targetX, targetY, PALETTES[palette], power);
+            // Create a special paint firework with random type and longer-lasting particles
+            const fireworkType = choice(FIREWORK_TYPES);
+            const paintFirework = new Firework(targetX, targetY, PALETTES[palette], power, fireworkType);
             // Make paint particles last longer and move slower for better paint effect
             paintFirework.particles.forEach(p => {
                 p.life *= 2; // Double the lifetime
@@ -510,7 +512,9 @@ const FireworksArcade: React.FC = () => {
             fireworksRef.current.push(paintFirework);
             pop(rand(200, 800));
         } else if (mode === 'show') {
-            fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], power));
+            // Use random firework type for variety
+            const fireworkType = choice(FIREWORK_TYPES);
+            fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], power, fireworkType));
             pop(rand(200, 800));
         }
     } 
