@@ -261,7 +261,7 @@ export class Rocket {
   targetX?: number;
   targetY?: number;
 
-  constructor(width: number, height: number, palettes: string[][], target?: { x: number, y: number }) {
+  constructor(width: number, height: number, palettes: string[][], target?: { x: number, y: number }, customVelocity?: { vx?: number, vy?: number }) {
     this.color = choice(choice(palettes));
     this.exploded = false;
 
@@ -269,14 +269,18 @@ export class Rocket {
         // User-launched rocket aiming for a target
         this.x = width / 2;
         this.y = height + 10;
-        this.vy = rand(-8.0, -9.5); // Consistently strong upward velocity
-
-        // Simplified physics: Calculate time to reach target height, then derive required vx
-        // This ignores the effect of gravity on vy over time for simplicity, but gives a good approximation.
-        const timeToTargetY = (target.y - this.y) / this.vy;
         
-        // Required horizontal velocity to reach target.x in that time
-        this.vx = (target.x - this.x) / timeToTargetY;
+        if (customVelocity) {
+            // Use custom velocity (for slow rockets)
+            this.vy = customVelocity.vy || rand(-8.0, -9.5);
+            this.vx = customVelocity.vx || 0;
+        } else {
+            // Normal velocity
+            this.vy = rand(-8.0, -9.5); // Consistently strong upward velocity
+            // Simplified physics: Calculate time to reach target height, then derive required vx
+            const timeToTargetY = (target.y - this.y) / this.vy;
+            this.vx = (target.x - this.x) / timeToTargetY;
+        }
         
         this.explodeY = target.y;
         this.targetX = target.x;

@@ -505,23 +505,45 @@ const FireworksArcade: React.FC = () => {
         
         // In Paint mode, create immediate explosion without rockets
         if (mode === 'paint') {
-            // Create a special paint firework with selected type and longer-lasting particles
-            const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
-            const paintFirework = new Firework(targetX, targetY, PALETTES[palette], power, selectedType);
-            // Make paint particles last longer and move slower for better paint effect
-            paintFirework.particles.forEach(p => {
-                p.life *= 2; // Double the lifetime
-                p.vx *= 0.5; // Half the horizontal speed
-                p.vy *= 0.5; // Half the vertical speed
-                p.size *= 1.2; // Slightly larger particles
-            });
-            fireworksRef.current.push(paintFirework);
-            pop(rand(200, 800), 0.08, power);
+            const audioResult = pop(rand(200, 800), 0.08, power);
+            
+            // Check if this is a large explosion that needs a timed rocket
+            if (audioResult === 'LARGE_EXPLOSION') {
+                // Create a slow rocket that will explode at exactly 5 seconds
+                // Calculate velocity to reach target in 5 seconds
+                const distanceToTarget = Math.abs(targetY - (rect.height + 10));
+                const slowVelocity = -distanceToTarget / 5; // 5 seconds to reach target
+                const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 });
+                rocketsRef.current.push(slowRocket);
+            } else {
+                // Regular paint firework with immediate explosion
+                const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
+                const paintFirework = new Firework(targetX, targetY, PALETTES[palette], power, selectedType);
+                // Make paint particles last longer and move slower for better paint effect
+                paintFirework.particles.forEach(p => {
+                    p.life *= 2; // Double the lifetime
+                    p.vx *= 0.5; // Half the horizontal speed
+                    p.vy *= 0.5; // Half the vertical speed
+                    p.size *= 1.2; // Slightly larger particles
+                });
+                fireworksRef.current.push(paintFirework);
+            }
         } else if (mode === 'show') {
-            // Use selected firework type
-            const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
-            fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], power, selectedType));
-            pop(rand(200, 800), 0.08, power);
+            const audioResult = pop(rand(200, 800), 0.08, power);
+            
+            // Check if this is a large explosion that needs a timed rocket
+            if (audioResult === 'LARGE_EXPLOSION') {
+                // Create a slow rocket that will explode at exactly 5 seconds
+                // Calculate velocity to reach target in 5 seconds
+                const distanceToTarget = Math.abs(targetY - (rect.height + 10));
+                const slowVelocity = -distanceToTarget / 5; // 5 seconds to reach target
+                const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 });
+                rocketsRef.current.push(slowRocket);
+            } else {
+                // Regular show firework with immediate explosion
+                const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
+                fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], power, selectedType));
+            }
         }
     } 
     // Handle Arcade mode (launch rockets)

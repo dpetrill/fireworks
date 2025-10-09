@@ -68,7 +68,9 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
       largeExplosionAudioRef.current.volume = volume * effectiveVolume;
       largeExplosionAudioRef.current.currentTime = 0;
       largeExplosionAudioRef.current.play().catch(console.error);
-      return; // Don't play regular audio for large explosions
+      
+      // Return a special flag to indicate this needs a timed rocket
+      return 'LARGE_EXPLOSION';
     }
     
     // Regular explosion audio (for power < 200%)
