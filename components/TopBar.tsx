@@ -95,7 +95,13 @@ const TopBar: React.FC<TopBarProps> = ({
             <button onClick={onSave} className="px-3 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-300/30 text-sm">Save Photo</button>
 
             <div className="flex items-center gap-2 bg-white/10 p-1 rounded-lg">
-                <button onClick={() => setSoundOn(s => !s)} className="text-lg w-7 h-7 flex items-center justify-center rounded-md hover:bg-white/20 transition-colors" aria-label={soundOn ? "Mute All" : "Unmute All"}>
+                <button onClick={() => {
+                  console.log('Mute button clicked, current soundOn:', soundOn);
+                  setSoundOn(s => {
+                    console.log('Setting soundOn to:', !s);
+                    return !s;
+                  });
+                }} className="text-lg w-7 h-7 flex items-center justify-center rounded-md hover:bg-white/20 transition-colors" aria-label={soundOn ? "Mute All" : "Unmute All"}>
                     {soundOn ? '🔊' : '🔇'}
                 </button>
                 <input 
