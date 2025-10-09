@@ -239,7 +239,7 @@ const FireworksArcade: React.FC = () => {
             const explosionY = r.targetY ?? r.y;
             const selectedType = fireworkTypeRef.current === 'random' ? choice(FIREWORK_TYPES) : fireworkTypeRef.current;
             newFireworks.push(new Firework(explosionX, explosionY, PALETTES[palette], 1, selectedType));
-            pop(rand(200, 800), 0.08, 1);
+            pop(rand(200, 800), 0.08, 1.0); // Use power 1.0 for regular rocket explosions
 
             if (modeRef.current === 'arcade') {
                 let rocketHitSomething = false;
@@ -474,26 +474,17 @@ const FireworksArcade: React.FC = () => {
         y: e.clientY - rect.top,
       };
       
-      // Start continuous hold detection
+      // Start continuous hold detection for power calculation only
       setIsHolding(true);
       holdIntervalRef.current = window.setInterval(() => {
         const info = pointerDownInfoRef.current;
         if (!info) return;
         
         const duration = performance.now() - info.time;
-        const power = clamp(duration / 1000, 0, 1); // 0 to 100% over 1 second
+        const power = clamp(duration / 1000, 0, 2.0); // 0 to 200% over 2 seconds
         
-        // If power > 0.1 (10%), trigger large explosion audio and rocket
-        if (power > 0.1) {
-          const audioResult = pop(rand(200, 800), 0.08, power);
-          if (audioResult === 'LARGE_EXPLOSION') {
-            // Create slow rocket that moves based on power percentage
-            const slowVelocity = -15 * (1 - power); // Slower as power increases
-            const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: info.x, y: info.y }, { vy: slowVelocity, vx: 0 }, true);
-            rocketsRef.current.push(slowRocket);
-            setLargeExplosionRocket(slowRocket);
-          }
-        }
+        // Just track the power, don't trigger explosions yet
+        // The explosion will be triggered in onCanvasPointerUp
       }, 100); // Check every 100ms
     }
   };
@@ -532,26 +523,39 @@ const FireworksArcade: React.FC = () => {
         let power = 0;
         if (info) {
             const duration = performance.now() - info.time;
-            // Calculate power: starts at 0, increments slowly to 1 (100%) over time
-            // Each 1ms adds 0.001, so it takes 1000ms (1 second) to reach 100%
-            power = clamp(duration / 1000, 0, 1);
+            // Calculate power: starts at 0, increments slowly to 2.0 (200%) over time
+            // Each 1ms adds 0.002, so it takes 1000ms (1 second) to reach 100%, 2000ms to reach 200%
+            power = clamp(duration / 1000, 0, 2.0);
         }
         
-        // In Show mode, always launch rockets regardless of Auto-Play setting
-        if (mode === 'show') {
-            rocketsRef.current.push(new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }));
-            pop(1000, 0.05, 1);
-        }
-        
-        // In Paint mode, create immediate explosion without rockets
-        if (mode === 'paint') {
-            // Check if this is a single click (power = 0) or a hold (power > 0)
-            if (power === 0) {
-                // Single click - create rocket trail and immediate explosion
-                const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
+        // Check if this is a large explosion (power > 1.0) or regular firework
+        if (power > 1.0) {
+            // Large explosion - create slow rocket and play large explosion audio
+            const audioResult = pop(rand(200, 800), 0.08, power);
+            if (audioResult === 'LARGE_EXPLOSION') {
+                // Create slow rocket that moves based on power percentage
+                const slowVelocity = -15 * (1 - power); // Slower as power increases
+                const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 }, true);
+                rocketsRef.current.push(slowRocket);
+                setLargeExplosionRocket(slowRocket);
+            }
+        } else {
+            // Regular firework (power <= 1.0)
+            const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
+            
+            if (mode === 'show') {
+                // Create a fast rocket for show mode
+                const fastRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: -200, vx: 0 });
+                rocketsRef.current.push(fastRocket);
                 
-                // Create a fast rocket for single clicks (like a water pistol)
-                const fastRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: -200, vx: 0 }); // Very fast upward movement
+                // Also create immediate show firework
+                fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], 1, selectedType));
+                
+                // Play regular firework audio
+                pop(rand(200, 800), 0.08, 1.0);
+            } else if (mode === 'paint') {
+                // Create a fast rocket for paint mode
+                const fastRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: -200, vx: 0 });
                 rocketsRef.current.push(fastRocket);
                 
                 // Also create immediate paint firework
@@ -565,27 +569,9 @@ const FireworksArcade: React.FC = () => {
                 });
                 fireworksRef.current.push(paintFirework);
                 
-                // Play regular firework audio for single clicks
-                pop(rand(200, 800), 0.08, 0); // Use power 0 for regular audio
+                // Play regular firework audio
+                pop(rand(200, 800), 0.08, 1.0);
             }
-            // For holds (power > 0), the rocket and audio are already handled in the interval
-        } else if (mode === 'show') {
-            // Check if this is a single click (power = 0) or a hold (power > 0)
-            if (power === 0) {
-                // Single click - create rocket trail and immediate explosion
-                const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
-                
-                // Create a fast rocket for single clicks (like a water pistol)
-                const fastRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: -200, vx: 0 }); // Very fast upward movement
-                rocketsRef.current.push(fastRocket);
-                
-                // Also create immediate show firework
-                fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], 1, selectedType));
-                
-                // Play regular firework audio for single clicks
-                pop(rand(200, 800), 0.08, 0); // Use power 0 for regular audio
-            }
-            // For holds (power > 0), the rocket and audio are already handled in the interval
         }
     } 
     // Handle Arcade mode (launch rockets)
@@ -596,7 +582,7 @@ const FireworksArcade: React.FC = () => {
             return;
         }
         rocketsRef.current.push(new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }));
-        pop(1000, 0.05);
+        pop(1000, 0.05, 1.0); // Use power 1.0 for regular arcade audio
     }
   };
 
