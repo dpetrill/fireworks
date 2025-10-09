@@ -290,7 +290,7 @@ const FireworksArcade: React.FC = () => {
     const pointerInfo = pointerDownInfoRef.current;
     if ((modeRef.current === 'paint' || modeRef.current === 'show') && pointerInfo) {
       const duration = time - pointerInfo.time;
-      const power = clamp(duration / 10, 0, 1); // 0 to 100%
+      const power = clamp(duration / 1000, 0, 1); // 0 to 100% over 1 second
       const percent = Math.floor(power * 100);
 
       const { x, y } = pointerInfo;
@@ -505,8 +505,8 @@ const FireworksArcade: React.FC = () => {
         if (info) {
             const duration = performance.now() - info.time;
             // Calculate power: starts at 0, increments slowly to 1 (100%) over time
-            // Each 10ms adds 0.01, so it takes 10 seconds to reach 100%
-            power = clamp(duration / 10, 0, 1);
+            // Each 1ms adds 0.001, so it takes 1000ms (1 second) to reach 100%
+            power = clamp(duration / 1000, 0, 1);
         }
         
         // In Show mode, only launch rockets if Auto-Play is enabled
@@ -517,8 +517,8 @@ const FireworksArcade: React.FC = () => {
         
         // In Paint mode, create immediate explosion without rockets
         if (mode === 'paint') {
-            // Check if this is a large explosion (power > 0.1 means hold longer than single click)
-            if (power > 0.1) {
+            // Check if this is a large explosion (power > 0 means any hold)
+            if (power > 0) {
                 // Large explosion - play special audio and create slow rocket
                 const audioResult = pop(rand(200, 800), 0.08, power);
                 if (audioResult === 'LARGE_EXPLOSION') {
@@ -529,9 +529,9 @@ const FireworksArcade: React.FC = () => {
                     setLargeExplosionRocket(slowRocket); // Track for reference
                 }
             } else {
-                // Regular paint firework with immediate explosion (single click)
+                // Regular paint firework with immediate explosion (single click - power = 0)
                 const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
-                const paintFirework = new Firework(targetX, targetY, PALETTES[palette], power, selectedType);
+                const paintFirework = new Firework(targetX, targetY, PALETTES[palette], 1, selectedType); // Use power 1 for regular explosion
                 // Make paint particles last longer and move slower for better paint effect
                 paintFirework.particles.forEach(p => {
                     p.life *= 2; // Double the lifetime
@@ -541,11 +541,11 @@ const FireworksArcade: React.FC = () => {
                 });
                 fireworksRef.current.push(paintFirework);
                 // Play regular firework audio for single clicks
-                pop(rand(200, 800), 0.08, power);
+                pop(rand(200, 800), 0.08, 1); // Use power 1 for regular audio
             }
         } else if (mode === 'show') {
-            // Check if this is a large explosion (power > 0.1 means hold longer than single click)
-            if (power > 0.1) {
+            // Check if this is a large explosion (power > 0 means any hold)
+            if (power > 0) {
                 // Large explosion - play special audio and create slow rocket
                 const audioResult = pop(rand(200, 800), 0.08, power);
                 if (audioResult === 'LARGE_EXPLOSION') {
@@ -556,11 +556,11 @@ const FireworksArcade: React.FC = () => {
                     setLargeExplosionRocket(slowRocket); // Track for reference
                 }
             } else {
-                // Regular show firework with immediate explosion (single click)
+                // Regular show firework with immediate explosion (single click - power = 0)
                 const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
-                fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], power, selectedType));
+                fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], 1, selectedType)); // Use power 1 for regular explosion
                 // Play regular firework audio for single clicks
-                pop(rand(200, 800), 0.08, power);
+                pop(rand(200, 800), 0.08, 1); // Use power 1 for regular audio
             }
         }
     } 
