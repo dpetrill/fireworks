@@ -24,6 +24,7 @@ const FireworksArcade: React.FC = () => {
   const [gravity, setGravity] = useState(0.045);
   const [palette, setPalette] = useState(0);
   const [fireworkType, setFireworkType] = useState('random');
+  const [finaleDuration, setFinaleDuration] = useState(5);
   const [isMenuVisible, setIsMenuVisible] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -593,10 +594,15 @@ const FireworksArcade: React.FC = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    for (let i = 0; i < 25; i++) {
+    
+    // Calculate number of rockets based on duration (more rockets for longer finale)
+    const rocketCount = Math.floor(25 * (finaleDuration / 5)); // Scale based on 5s default
+    const maxDelay = finaleDuration * 1000; // Convert to milliseconds
+    
+    for (let i = 0; i < rocketCount; i++) {
       setTimeout(() => {
         rocketsRef.current.push(new Rocket(rect.width, rect.height, PALETTES));
-      }, rand(0, 800));
+      }, rand(0, maxDelay));
     }
   };
 
@@ -686,6 +692,7 @@ const FireworksArcade: React.FC = () => {
           autoShow={autoShow} setAutoShow={setAutoShow}
           gravity={gravity} setGravity={setGravity}
           fireworkType={fireworkType} setFireworkType={setFireworkType}
+          finaleDuration={finaleDuration} setFinaleDuration={setFinaleDuration}
           onFinale={handleFinale}
           onClear={handleClear}
           onSave={handleSave}

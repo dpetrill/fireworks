@@ -19,6 +19,8 @@ interface TopBarProps {
   setGravity: React.Dispatch<React.SetStateAction<number>>;
   fireworkType: string;
   setFireworkType: React.Dispatch<React.SetStateAction<string>>;
+  finaleDuration: number;
+  setFinaleDuration: React.Dispatch<React.SetStateAction<number>>;
   onFinale: () => void;
   onClear: () => void;
   onSave: () => void;
@@ -35,7 +37,7 @@ const TopBar: React.FC<TopBarProps> = ({
   mode, setMode, running, onTogglePlayback, soundOn, setSoundOn, 
   fireworkSfxOn, setFireworkSfxOn, volume, setVolume,
   autoShow, setAutoShow, gravity, setGravity, 
-  fireworkType, setFireworkType, onFinale,
+  fireworkType, setFireworkType, finaleDuration, setFinaleDuration, onFinale,
   onClear, onSave, 
   score, timer, best, isMenuVisible, setIsMenuVisible, isFullscreen, onToggleFullscreen
 }) => {
@@ -158,6 +160,22 @@ const TopBar: React.FC<TopBarProps> = ({
                 <option value="crossette">✨ Crossette</option>
                 <option value="peony">🌸 Peony</option>
                 <option value="chrysanthemum">🎇 Chrysanthemum</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1 text-xs md:text-sm">
+              <span className="opacity-80">Finale</span>
+              <select value={finaleDuration} onChange={(e) => setFinaleDuration(Number(e.target.value))} className="bg-black/50 border border-white/20 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400">
+                <option value={1}>1s</option>
+                <option value={2}>2s</option>
+                <option value={3}>3s</option>
+                <option value={4}>4s</option>
+                <option value={5}>5s</option>
+                <option value={6}>6s</option>
+                <option value={7}>7s</option>
+                <option value={8}>8s</option>
+                <option value={9}>9s</option>
+                <option value={10}>10s</option>
               </select>
             </div>
           </div>
