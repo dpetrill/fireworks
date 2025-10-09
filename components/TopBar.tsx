@@ -111,17 +111,24 @@ const TopBar: React.FC<TopBarProps> = ({
                 }} className="text-lg w-7 h-7 flex items-center justify-center rounded-md hover:bg-white/20 transition-colors" aria-label={soundOn ? "Mute All" : "Unmute All"}>
                     {soundOn ? '🔊' : '🔇'}
                 </button>
-                <input 
-                    type="range" 
-                    min="0" 
-                    max="1" 
-                    step="0.05" 
-                    value={volume} 
-                    onChange={(e) => setVolume(parseFloat(e.target.value))} 
-                    className="w-20 accent-pink-400 disabled:opacity-50"
-                    disabled={!soundOn}
-                    aria-label="Master Volume"
-                />
+           <input 
+               type="range" 
+               min="0" 
+               max="1" 
+               step="0.05" 
+               value={volume} 
+               onChange={(e) => {
+                 const newVolume = parseFloat(e.target.value);
+                 setVolume(newVolume);
+                 // Update global audio manager
+                 if (typeof window !== 'undefined' && (window as any).AudioManager) {
+                   (window as any).AudioManager.setVolume(newVolume);
+                 }
+               }} 
+               className="w-20 accent-pink-400 disabled:opacity-50"
+               disabled={!soundOn}
+               aria-label="Master Volume"
+           />
                 <span className="text-xs text-white/70 min-w-[2rem] text-center">
                   {Math.round(volume * 100)}%
                 </span>

@@ -4,9 +4,12 @@ import { useEffect, useRef, useCallback } from 'react';
 const AudioManager = {
   masterVolume: 0.5,
   muted: false,
+  isPlaying: false,
+  loopTimeout: null as number | null,
   
   setVolume(vol: number) {
     this.masterVolume = vol;
+    console.log('AudioManager: Volume set to', vol);
   },
   
   toggleMute() {
@@ -16,6 +19,14 @@ const AudioManager = {
   
   getEffectiveVolume(): number {
     return this.muted ? 0 : this.masterVolume;
+  },
+
+  stopLoop() {
+    if (this.loopTimeout) {
+      clearTimeout(this.loopTimeout);
+      this.loopTimeout = null;
+    }
+    this.isPlaying = false;
   }
 };
 
@@ -25,8 +36,9 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
   useEffect(() => {
     // Create audio element for the fireworks sound
     if (!audioRef.current) {
-      audioRef.current = new Audio('/fireworks-29629.mp3');
+      audioRef.current = new Audio('/firework.mp3');
       audioRef.current.preload = 'auto';
+      audioRef.current.loop = true; // Enable looping
       audioRef.current.volume = 0.5; // Default volume
     }
   }, []);
@@ -34,21 +46,35 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
   const pop = useCallback((pitch = 600, duration = 0.08) => {
     console.log('Audio check:', { soundOn, volume, fireworkSfxOn, muted: AudioManager.muted });
     
+    // Check if sound should play
+    if (!soundOn || fireworkSfxOn === false) return;
+    
     // Use global audio manager for mute control
     const effectiveVolume = AudioManager.getEffectiveVolume();
     if (effectiveVolume === 0) return;
-    
-    if (!soundOn || volume === 0) return;
-    if (fireworkSfxOn === false) return;
     
     if (!audioRef.current) return;
 
     // Set volume based on user settings and global mute
     audioRef.current.volume = volume * effectiveVolume;
     
-    // Reset to beginning and play
-    audioRef.current.currentTime = 0;
-    audioRef.current.play().catch(console.error);
+    // If not already playing, start the audio loop
+    if (!AudioManager.isPlaying) {
+      AudioManager.isPlaying = true;
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(console.error);
+      
+      // Stop the loop after 5-10 seconds (random duration)
+      const loopDuration = Math.random() * 5000 + 5000; // 5-10 seconds
+      AudioManager.loopTimeout = window.setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+        AudioManager.isPlaying = false;
+        AudioManager.loopTimeout = null;
+      }, loopDuration);
+    }
   }, [soundOn, volume, fireworkSfxOn]);
 
   // Expose AudioManager globally for TopBar access
@@ -56,6 +82,13 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
     if (typeof window !== 'undefined') {
       (window as any).AudioManager = AudioManager;
     }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      AudioManager.stopLoop();
+    };
   }, []);
 
   return pop;
