@@ -520,19 +520,28 @@ const FireworksArcade: React.FC = () => {
       };
       
       if (mode === 'show') {
-        // Start drag-based size control
-        setIsDraggingForSize(true);
+        // Initialize drag tracking but don't show UI yet
         setDragStartY(e.clientY);
         setExplosionSizeMultiplier(1.0);
+        // Don't set isDraggingForSize to true yet - wait for actual movement
       }
     }
   };
 
   const onCanvasPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (isDraggingForSize && mode === 'show') {
-      const dragDistance = dragStartY - e.clientY;
-      const newMultiplier = Math.max(0.3, Math.min(3.0, 1.0 + (dragDistance / 200)));
-      setExplosionSizeMultiplier(newMultiplier);
+    if (mode === 'show' && pointerDownInfoRef.current) {
+      const dragDistance = Math.abs(dragStartY - e.clientY);
+      
+      // Only start size control if there's significant movement (more than 10 pixels)
+      if (dragDistance > 10 && !isDraggingForSize) {
+        setIsDraggingForSize(true);
+      }
+      
+      if (isDraggingForSize) {
+        const actualDragDistance = dragStartY - e.clientY;
+        const newMultiplier = Math.max(0.3, Math.min(3.0, 1.0 + (actualDragDistance / 200)));
+        setExplosionSizeMultiplier(newMultiplier);
+      }
     }
   };
 
