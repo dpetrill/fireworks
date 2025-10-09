@@ -23,6 +23,7 @@ const FireworksArcade: React.FC = () => {
   const [autoShow, setAutoShow] = useState(true);
   const [gravity, setGravity] = useState(0.045);
   const [palette, setPalette] = useState(0);
+  const [fireworkType, setFireworkType] = useState('random');
   const [isMenuVisible, setIsMenuVisible] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -232,8 +233,8 @@ const FireworksArcade: React.FC = () => {
         explodingRockets.forEach(r => {
             const explosionX = r.targetX ?? r.x;
             const explosionY = r.targetY ?? r.y;
-            const fireworkType = choice(FIREWORK_TYPES);
-            newFireworks.push(new Firework(explosionX, explosionY, PALETTES[palette], 1, fireworkType));
+            const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
+            newFireworks.push(new Firework(explosionX, explosionY, PALETTES[palette], 1, selectedType));
             pop(rand(200, 800));
 
             if (modeRef.current === 'arcade') {
@@ -499,9 +500,9 @@ const FireworksArcade: React.FC = () => {
         
         // In Paint mode, create immediate explosion without rockets
         if (mode === 'paint') {
-            // Create a special paint firework with random type and longer-lasting particles
-            const fireworkType = choice(FIREWORK_TYPES);
-            const paintFirework = new Firework(targetX, targetY, PALETTES[palette], power, fireworkType);
+            // Create a special paint firework with selected type and longer-lasting particles
+            const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
+            const paintFirework = new Firework(targetX, targetY, PALETTES[palette], power, selectedType);
             // Make paint particles last longer and move slower for better paint effect
             paintFirework.particles.forEach(p => {
                 p.life *= 2; // Double the lifetime
@@ -512,9 +513,9 @@ const FireworksArcade: React.FC = () => {
             fireworksRef.current.push(paintFirework);
             pop(rand(200, 800));
         } else if (mode === 'show') {
-            // Use random firework type for variety
-            const fireworkType = choice(FIREWORK_TYPES);
-            fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], power, fireworkType));
+            // Use selected firework type
+            const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
+            fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], power, selectedType));
             pop(rand(200, 800));
         }
     } 
@@ -685,6 +686,7 @@ const FireworksArcade: React.FC = () => {
           autoShow={autoShow} setAutoShow={setAutoShow}
           gravity={gravity} setGravity={setGravity}
           palette={palette} setPalette={setPalette}
+          fireworkType={fireworkType} setFireworkType={setFireworkType}
           onFinale={handleFinale}
           onClear={handleClear}
           onSave={handleSave}
