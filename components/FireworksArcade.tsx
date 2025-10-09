@@ -516,18 +516,19 @@ const FireworksArcade: React.FC = () => {
         
         // In Paint mode, create immediate explosion without rockets
         if (mode === 'paint') {
-            const audioResult = pop(rand(200, 800), 0.08, power);
-            
-            // Check if this is a large explosion that needs a timed rocket
-            if (audioResult === 'LARGE_EXPLOSION') {
-                // Create an extremely slow rocket that takes longer than 5 seconds to reach target
-                // The rocket should move much slower than the audio length
-                const slowVelocity = -15; // Extremely slow upward movement - slower than audio
-                const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 }, true);
-                rocketsRef.current.push(slowRocket);
-                setLargeExplosionRocket(slowRocket); // Track for reference
+            // Check if this is a large explosion (power > 1.0 means hold longer than single click)
+            if (power > 1.0) {
+                // Large explosion - play special audio and create slow rocket
+                const audioResult = pop(rand(200, 800), 0.08, power);
+                if (audioResult === 'LARGE_EXPLOSION') {
+                    // Create an extremely slow rocket that takes longer than 5 seconds to reach target
+                    const slowVelocity = -15; // Extremely slow upward movement - slower than audio
+                    const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 }, true);
+                    rocketsRef.current.push(slowRocket);
+                    setLargeExplosionRocket(slowRocket); // Track for reference
+                }
             } else {
-                // Regular paint firework with immediate explosion
+                // Regular paint firework with immediate explosion (single click)
                 const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
                 const paintFirework = new Firework(targetX, targetY, PALETTES[palette], power, selectedType);
                 // Make paint particles last longer and move slower for better paint effect
@@ -538,22 +539,27 @@ const FireworksArcade: React.FC = () => {
                     p.size *= 1.2; // Slightly larger particles
                 });
                 fireworksRef.current.push(paintFirework);
+                // Play regular firework audio for single clicks
+                pop(rand(200, 800), 0.08, power);
             }
         } else if (mode === 'show') {
-            const audioResult = pop(rand(200, 800), 0.08, power);
-            
-            // Check if this is a large explosion that needs a timed rocket
-            if (audioResult === 'LARGE_EXPLOSION') {
-                // Create an extremely slow rocket that takes longer than 5 seconds to reach target
-                // The rocket should move much slower than the audio length
-                const slowVelocity = -15; // Extremely slow upward movement - slower than audio
-                const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 }, true);
-                rocketsRef.current.push(slowRocket);
-                setLargeExplosionRocket(slowRocket); // Track for reference
+            // Check if this is a large explosion (power > 1.0 means hold longer than single click)
+            if (power > 1.0) {
+                // Large explosion - play special audio and create slow rocket
+                const audioResult = pop(rand(200, 800), 0.08, power);
+                if (audioResult === 'LARGE_EXPLOSION') {
+                    // Create an extremely slow rocket that takes longer than 5 seconds to reach target
+                    const slowVelocity = -15; // Extremely slow upward movement - slower than audio
+                    const slowRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY }, { vy: slowVelocity, vx: 0 }, true);
+                    rocketsRef.current.push(slowRocket);
+                    setLargeExplosionRocket(slowRocket); // Track for reference
+                }
             } else {
-                // Regular show firework with immediate explosion
+                // Regular show firework with immediate explosion (single click)
                 const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
                 fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], power, selectedType));
+                // Play regular firework audio for single clicks
+                pop(rand(200, 800), 0.08, power);
             }
         }
     } 

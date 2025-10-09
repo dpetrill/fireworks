@@ -62,8 +62,8 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
     const effectiveVolume = AudioManager.getEffectiveVolume();
     if (effectiveVolume === 0) return;
     
-    // Check if this is a large explosion (100%+ power)
-    if (power >= 1.0 && largeExplosionAudioRef.current) {
+    // Check if this is a large explosion (longer than single click - power > 1.0)
+    if (power > 1.0 && largeExplosionAudioRef.current) {
       // Play the special large explosion audio
       largeExplosionAudioRef.current.volume = volume * effectiveVolume;
       largeExplosionAudioRef.current.currentTime = 0;
@@ -73,7 +73,7 @@ export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: bo
       return 'LARGE_EXPLOSION';
     }
     
-    // Regular explosion audio (for power < 200%)
+    // Regular explosion audio (for single clicks - power = 1.0)
     if (!audioRef.current) return;
 
     // Set volume based on user settings and global mute
