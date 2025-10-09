@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Mode } from '../types';
-import { PALETTES } from '../constants';
 
 interface TopBarProps {
   mode: Mode;
@@ -17,8 +16,6 @@ interface TopBarProps {
   setAutoShow: React.Dispatch<React.SetStateAction<boolean>>;
   gravity: number;
   setGravity: React.Dispatch<React.SetStateAction<number>>;
-  palette: number;
-  setPalette: React.Dispatch<React.SetStateAction<number>>;
   fireworkType: string;
   setFireworkType: React.Dispatch<React.SetStateAction<string>>;
   onFinale: () => void;
@@ -36,7 +33,7 @@ interface TopBarProps {
 const TopBar: React.FC<TopBarProps> = ({
   mode, setMode, running, onTogglePlayback, soundOn, setSoundOn, 
   fireworkSfxOn, setFireworkSfxOn, volume, setVolume,
-  autoShow, setAutoShow, gravity, setGravity, palette, setPalette, 
+  autoShow, setAutoShow, gravity, setGravity, 
   fireworkType, setFireworkType, onFinale,
   onClear, onSave, 
   score, timer, best, isMenuVisible, setIsMenuVisible, isFullscreen, onToggleFullscreen
@@ -49,7 +46,7 @@ const TopBar: React.FC<TopBarProps> = ({
           <div className="flex items-center gap-2 md:gap-3">
             <h1 className="text-lg md:text-2xl font-bold tracking-wide">🎆</h1>
             <div className="flex flex-col">
-              <h1 className="text-lg md:text-2xl font-bold tracking-wide">Fireworks Arcade</h1>
+              <h1 className="text-lg md:text-2xl font-bold tracking-wide">Firework Zen</h1>
               <span className="text-[10px] md:text-xs opacity-70 -mt-1">Show • Paint • Arcade</span>
             </div>
           </div>
@@ -145,14 +142,6 @@ const TopBar: React.FC<TopBarProps> = ({
               <input type="range" min="0" max="0.12" step="0.005" value={gravity} onChange={(e) => setGravity(parseFloat(e.target.value))} className="w-20 accent-pink-400"/>
             </div>
 
-            <div className="flex items-center gap-1 text-xs md:text-sm">
-              <span className="opacity-80">Palette</span>
-              <select value={palette} onChange={(e) => setPalette(Number(e.target.value))} className="bg-black/50 border border-white/20 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400">
-                {PALETTES.map((p, i) => (
-                  <option key={i} value={i}>#{i + 1}</option>
-                ))}
-              </select>
-            </div>
 
             <div className="flex items-center gap-1 text-xs md:text-sm">
               <span className="opacity-80">Firework Type</span>
