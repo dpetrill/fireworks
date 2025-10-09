@@ -14,8 +14,6 @@ declare const adjuice: any;
 
 // --- Main Component ---
 const FireworksArcade: React.FC = () => {
-  console.log('FireworksArcade component rendering...');
-  
   // --- State ---
   const [mode, setMode] = useState<Mode>('show');
   const [running, setRunning] = useState(true);
