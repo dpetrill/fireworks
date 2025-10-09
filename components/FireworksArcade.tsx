@@ -66,7 +66,7 @@ const FireworksArcade: React.FC = () => {
 
 
   // --- Audio ---
-  const pop = usePopAudio(soundOn && fireworkSfxOn, volume);
+  const pop = usePopAudio(soundOn, volume, fireworkSfxOn);
   
   // --- AdJuice SDK Readiness Check ---
   useEffect(() => {

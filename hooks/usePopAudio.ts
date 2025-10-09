@@ -1,10 +1,10 @@
 import { useEffect, useRef, useCallback } from 'react';
 
-export function usePopAudio(enabled: boolean, volume: number): (pitch?: number, duration?: number) => void {
+export function usePopAudio(soundOn: boolean, volume: number, fireworkSfxOn?: boolean): (pitch?: number, duration?: number) => void {
   const ctxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!soundOn) return;
 
     const resumeAudio = () => {
       if (!ctxRef.current) {
@@ -25,10 +25,11 @@ export function usePopAudio(enabled: boolean, volume: number): (pitch?: number, 
         window.removeEventListener('pointerdown', resumeAudio);
         window.removeEventListener('touchstart', resumeAudio);
     };
-  }, [enabled]);
+  }, [soundOn]);
 
   const pop = useCallback((pitch = 600, duration = 0.08) => {
-    if (!enabled || !ctxRef.current || volume === 0) return;
+    if (!soundOn || !ctxRef.current || volume === 0) return;
+    if (fireworkSfxOn === false) return;
     
     const ctx = ctxRef.current;
     if (ctx.state === 'suspended') {
@@ -45,7 +46,7 @@ export function usePopAudio(enabled: boolean, volume: number): (pitch?: number, 
     o.connect(g).connect(ctx.destination);
     o.start();
     o.stop(ctx.currentTime + duration + 0.02);
-  }, [enabled, volume]);
+  }, [soundOn, volume, fireworkSfxOn]);
 
   return pop;
 }
