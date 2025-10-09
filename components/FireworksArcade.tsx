@@ -547,8 +547,14 @@ const FireworksArcade: React.FC = () => {
         if (mode === 'paint') {
             // Check if this is a single click (power = 0) or a hold (power > 0)
             if (power === 0) {
-                // Single click - regular paint firework with immediate explosion
+                // Single click - create rocket trail and immediate explosion
                 const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
+                
+                // Create a fast rocket for single clicks
+                const fastRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY });
+                rocketsRef.current.push(fastRocket);
+                
+                // Also create immediate paint firework
                 const paintFirework = new Firework(targetX, targetY, PALETTES[palette], 1, selectedType);
                 // Make paint particles last longer and move slower for better paint effect
                 paintFirework.particles.forEach(p => {
@@ -558,6 +564,7 @@ const FireworksArcade: React.FC = () => {
                     p.size *= 1.2; // Slightly larger particles
                 });
                 fireworksRef.current.push(paintFirework);
+                
                 // Play regular firework audio for single clicks
                 pop(rand(200, 800), 0.08, 0); // Use power 0 for regular audio
             }
@@ -565,9 +572,16 @@ const FireworksArcade: React.FC = () => {
         } else if (mode === 'show') {
             // Check if this is a single click (power = 0) or a hold (power > 0)
             if (power === 0) {
-                // Single click - regular show firework with immediate explosion
+                // Single click - create rocket trail and immediate explosion
                 const selectedType = fireworkType === 'random' ? choice(FIREWORK_TYPES) : fireworkType;
+                
+                // Create a fast rocket for single clicks
+                const fastRocket = new Rocket(rect.width, rect.height, PALETTES, { x: targetX, y: targetY });
+                rocketsRef.current.push(fastRocket);
+                
+                // Also create immediate show firework
                 fireworksRef.current.push(new Firework(targetX, targetY, PALETTES[palette], 1, selectedType));
+                
                 // Play regular firework audio for single clicks
                 pop(rand(200, 800), 0.08, 0); // Use power 0 for regular audio
             }
